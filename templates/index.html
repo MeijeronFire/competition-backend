@@ -1,0 +1,21 @@
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 Otto Crawford -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    <p>Number of players: {{ player_count }}</p>
+
+    <ul>
+    {% for player in players %}
+        <li>Player {{ player }}</li>
+    {% endfor %}
+    </ul>
+
+</body>
+</html>

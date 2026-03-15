@@ -1,0 +1,24 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Otto Crawford",email = "cobalt_canon@protonmail.ch"}
+]
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi (>=0.135.1,<0.136.0)",
+    "uvicorn (>=0.41.0,<0.42.0)"
+]
+license = {file = LICENSE}
+
+[dependency-groups]
+dev = [
+    "pylance (>=3.0.0,<4.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
