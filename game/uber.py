@@ -23,6 +23,7 @@ class Uber(Game):
         }
         self.waitingForFillAmount = False
         self.glassToBeFilled = 0
+        self.ALLOWED_ACTIONS = ["fillAmount", "throw", "optOut"]
 
     def _onRegister(self):
         # add most recently added playername 

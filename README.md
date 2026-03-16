@@ -8,6 +8,7 @@ cd <project name>
 python -m venv .venv
 source .venv/bin/activate
 pip install .
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes # parameters do NOT matter. Can be random
 ./run.sh
 ```
 

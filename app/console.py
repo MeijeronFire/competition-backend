@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
 
-from connections import ConnectionMgr
+from app.connections import ConnectionMgr
 from game.uber import Game
 from pprint import pprint
 import cmd
@@ -15,57 +15,10 @@ class Console(cmd.Cmd):
 			self,
 			queue: asyncio.Queue,
 			loop: asyncio.AbstractEventLoop
-		):
-		#
-		#
-		#  THIS IS AN UGLY HACK
-		#
-		#
+    ):
 		super(Console, self).__init__()
 		self.queue = queue
 		self.loop = loop
-		#
-		#
-		# THIS IS AN UGLY HACK
-		#
-		#
-
-	# def do_hello(self, arg):
-	# 	"""
-	# 	usage: hello <name>
-
-	# 	name: person to greet
-	# 	"""
-	# 	print(f"Hello {arg}")
-	
-	# def do_printstate(self, arg):
-	# 	"""
-	# 	usage: printstate
-		
-	# 	prints current state of game
-	# 	"""
-	# 	pprint(self.uber.state)
-	
-	# def do_printplayerdata(self, arg):
-	# 	"""
-	# 	usage: printstate
-		
-	# 	prints current state of game
-	# 	"""
-	# 	pprint(self.uber.playerData)
-
-	# def do_kick(self, uuid: str):
-	# 	"""
-	# 	usage: kick <uuid>
-
-	# 	kicks a player by a UUID
-	# 	"""
-	# 	name = self.uber.playerData["players"][uuid]["displayName"]
-	# 	print(f"kicking {name}")
-	# 	if self.uber.delPlayer(uuid):
-	# 		print("succes")
-	# 	else:
-	# 		print('failure')
 	
 	def do_test(self, arg):
 		"""

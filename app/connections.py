@@ -2,33 +2,26 @@
 # Copyright (C) 2026 Otto Crawford
 
 from fastapi import WebSocket
-from typing import Set
+from app.client import Client
 import asyncio
 
 class ConnectionMgr:
     def __init__(self):
         # list of connections - should be live ones
-        self.connections: dict[str, WebSocket] = {}
+        self.connections: dict[WebSocket, Client] = {}
         self.connectionlock = False
     
-    async def connect(self, uuid: str, ws: WebSocket):
+    def connect(self, ws: WebSocket, client: Client):
         # don't allow further connection if it has been locked
         if self.connectionlock:
             print("Connection changes have been locked. Game must stop!")
             exit(0)
         # safe .append
-        self.connections[uuid] = ws
+        self.connections[ws] = client
     
-    async def throwError(self, ws: WebSocket):
-        await ws.send_json({
-            "type": "error",
-            "errorType": "malformed json"
-		})
-        print(f"Incoming json had an error")
-
-    def disconnect(self, uuid: str):
+    def disconnect(self, ws):
         # safe .remove method
-        self.connections.pop(uuid)
+        self.connections.pop(ws)
         print("Client disconnected (normal or abnormal)")
         # we still want to get rid of the dead connection, 
         # so this is afterwards
@@ -41,13 +34,13 @@ class ConnectionMgr:
         dead = []
         connections = self.connections
 
-        async def send(uuid: str, ws: WebSocket):
+        async def send(ws: WebSocket):
             try:
                 await ws.send_json(msg)
             except Exception:
-                dead.append(uuid)
+                dead.append(ws)
         
-        await asyncio.gather(*(send(ws, connections[ws]) for ws in connections))
+        await asyncio.gather(*(send(ws) for ws in connections))
 
         for ws in dead:
             self.disconnect(ws)
