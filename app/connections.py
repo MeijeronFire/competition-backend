@@ -36,6 +36,7 @@ class ConnectionMgr:
 
         async def send(ws: WebSocket):
             try:
+                print(f"sent {self.connections[ws].userName} something")
                 await ws.send_json(msg)
             except Exception:
                 dead.append(ws)

@@ -40,8 +40,6 @@ def readMsg(msg: dict) -> dict | None:
 	msgType = msg["type"]
 	match msgType:
 		case "register":
-			# register player in game state and capture UUID
-			# acknowledge and share generated UUID of player
 			pass
 		
 		case "getState":
@@ -50,10 +48,6 @@ def readMsg(msg: dict) -> dict | None:
 				"type": "stateResp",
 				"state": game.getState()
 			}
-		
-		case "showPacket":
-			sleep(2)
-			return msg
 		
 		case "action":
 			# we come up with our [resp]onse
@@ -135,6 +129,11 @@ async def delClient(client: Client):
 	# remove the class
 	del client
 	return
+
+# remove ASAP
+def somePrint(printable: str):
+	print(printable)
+
 #
 # API endpoints
 #
@@ -155,8 +154,11 @@ async def websocket_endpoint(ws: WebSocket):
 	# interpret the first packet, which contains
 	# client-defined information
 	data = await ws.receive_json()
+	# DO NOT DO THIS
+	msg = data
 	try:
-		msg = json.loads(data)
+		# msg = json.load(data)
+		pass
 	except json.JSONDecodeError:
 		print(f"client {connectedUser} sent a malformed first packet.")
 		await ws.close()
@@ -170,17 +172,21 @@ async def websocket_endpoint(ws: WebSocket):
 		await ws.close()
 		return
 	
+	# now we know we have a correct JSON packet so we can start interpreting the connection
+	connectedUser.uname(regPacket.name)
+	connectedUser.route(print)
+
 	# do this until the websocket disconnects unexpectedly
 	try: 
 		while 1:
-			data = await ws.receive_text()
+			data = await ws.receive_json()
 			try: # do this unless the json is broken
 				# read and load message
-				msg = json.loads(data)
+				msg = json.load(data)
 			except json.JSONDecodeError: # if the json is broken
 				continue # wait for the next thingie
 
-			resp = readMsg(msg) # handle the message
+			resp = connectedUser.handleMsg(msg) # handle the message
 			await ws.send_json(resp) # send response
 	except WebSocketDisconnect:
 		# on disconnect run the manager disconnect hook

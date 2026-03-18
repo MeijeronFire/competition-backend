@@ -78,8 +78,9 @@ async def handler(game: Game, queue: asyncio.queues.Queue, mgr: ConnectionMgr):
 				send_thing = {
 					"type" : "gameState",
 					"state": game.getState(),
-					"turn": turn
+					"turn": "Jeffie" # turn
 				}
+				print(f"broadcasting {send_thing}")
 				await mgr.broadcast(send_thing)
 
 			case("printState"):
