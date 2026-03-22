@@ -7,9 +7,39 @@ Now this protocol presupposes two main parts: a client and a server. Both the cl
 
 ## test
 ```mermaid
-graph TD;
-    A-->B;
-    A-->C;
-    B-->D;
-    C-->D;
+sequenceDiagram
+    box Gray Server
+    participant page as Webpage
+    participant SF as Game server @ route
+    participant SB as Connection interface @ URL
+    end
+    box Gray Client
+    participant CB as Connection interface
+    participant CF as Implementation
+    end
+
+    critical registration
+        CF->>CB: URL, username, route
+        CB->>+SB: username, route
+        Note over SB:Generate UUID
+        SB->>SF: username, UUID
+        SB->>page: New user
+        SB->>-CB: recevied registration
+    end
+
+    loop
+        SF->>+SB: UUID: state, request
+        Note over SB:Find connection associated w/ UUID
+        SB->>+CB: state, request
+        Note over CB: Find handler associated w/ request
+        CB->>+CF: state
+        CF->>-CB: response
+        CB->>-SB: response
+        SB->>-SF: response
+        SF->>page: state
+        Note over SF: Determine next request
+    end
+    
+
+    
 ```
