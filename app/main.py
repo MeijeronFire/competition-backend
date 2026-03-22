@@ -35,43 +35,8 @@ game = Uber()
 cmdQueue = asyncio.Queue()
 connectionMgr = ConnectionMgr()
 
-# TMP, DELETE ASAP
-def readMsg(msg: dict) -> dict | None:
-	msgType = msg["type"]
-	match msgType:
-		case "register":
-			pass
-		
-		case "getState":
-			sleep(2)
-			return {
-				"type": "stateResp",
-				"state": game.getState()
-			}
-		
-		case "action":
-			# we come up with our [resp]onse
-			resp = game.handleAction(msg)
-			if type(resp) == str:
-				return {
-					"type": resp
-				}
-			else:
-				# thus it is a bool
-				# if it is true we are done so we don't have to
-				# respond with anything. If it is false we also
-				# don't respond with anything, thus we just pass.
-				pass
-			return
-		
-		case _:
-			return {
-				"type": "error",
-				"errorType": "unknown protocol"
-			}
 
-
-ALLOWED_ACTIONS = game.ALLOWED_ACTIONS + ["register"]
+ALLOWED_ACTIONS = ["register"]
 
 # utils
 def console_runner():
@@ -106,7 +71,7 @@ templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # initialize client
-async def initClient(ws: WebSocket):
+async def initClient(ws: WebSocket) -> Client:
 	# accept the connection
 	await ws.accept()
 
@@ -142,18 +107,19 @@ def somePrint(printable: str):
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
 	return templates.TemplateResponse("index.html", {
-			"request": request,
-			"title": "FastAPI Game",
-			"players" : game.state["playerNames"]
-		})
+		"request": request,
+		"title": "FastAPI Game",
+		"players" : game.state["playerNames"]
+	})
 
 # TRANSPORT LAYER
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
+	# after this point, never access the websocket object directly
 	connectedUser = await initClient(ws)
 	# interpret the first packet, which contains
 	# client-defined information
-	data = await ws.receive_json()
+	data = await connectedUser.ws.receive_json()
 	# DO NOT DO THIS
 	msg = data
 	try:
@@ -161,7 +127,7 @@ async def websocket_endpoint(ws: WebSocket):
 		pass
 	except json.JSONDecodeError:
 		print(f"client {connectedUser} sent a malformed first packet.")
-		await ws.close()
+		await delClient(connectedUser)
 		return
 
 	# so the registration contains correct json
@@ -169,24 +135,32 @@ async def websocket_endpoint(ws: WebSocket):
 		regPacket = RegisterPacket.model_validate(msg)
 	except ValidationError:
 		print(f"client {connectedUser} set an incorrect JSON registration packet.")
+		# TODO: make this more verbose to explain which packet would be expected
+		await ws.send_json({
+			"type": "error",
+			"errorType": "Incorrect JSON registration packet sent"
+		})
 		await ws.close()
 		return
 	
 	# now we know we have a correct JSON packet so we can start interpreting the connection
 	connectedUser.uname(regPacket.name)
-	connectedUser.route(print)
+
+	# MAKE THIS CONDITIONAL
+	connectedUser.route(game.parsePacket)
+
+	# we send a response to the user
+	await ws.send_json({
+		"type": "regResp",
+		"msg": "Registration OK."
+	})
 
 	# do this until the websocket disconnects unexpectedly
 	try: 
 		while 1:
-			data = await ws.receive_json()
-			try: # do this unless the json is broken
-				# read and load message
-				msg = json.load(data)
-			except json.JSONDecodeError: # if the json is broken
-				continue # wait for the next thingie
+			data = await ws.receive_text()
 
-			resp = connectedUser.handleMsg(msg) # handle the message
+			resp = connectedUser.handleMsg(data) # handle the message
 			await ws.send_json(resp) # send response
 	except WebSocketDisconnect:
 		# on disconnect run the manager disconnect hook

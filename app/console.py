@@ -20,38 +20,6 @@ class Console(cmd.Cmd):
 		self.queue = queue
 		self.loop = loop
 	
-	def do_test(self, arg):
-		"""
-		usage: kick <msg>
-		
-		prints <msg>
-		"""
-		asyncio.run_coroutine_threadsafe(
-			self.queue.put(("test", arg)),
-			self.loop
-		)
-
-	def do_sendState(self, arg):
-		"""
-		usage: sendState
-		
-		broadcasts current state to all connected clients
-		"""
-		asyncio.run_coroutine_threadsafe(
-			self.queue.put(("sendState", arg)),
-			self.loop
-		)
-
-	def do_printState(self, arg):
-		"""
-		usage: printState
-		
-		prints current gameState dict in console
-		"""
-		asyncio.run_coroutine_threadsafe(
-			self.queue.put(("printState", arg)),
-			self.loop
-		)
 
 	def do_printConnections(self, arg):
 		"""
@@ -63,29 +31,11 @@ class Console(cmd.Cmd):
 			self.queue.put(("printConnections", arg)),
 			self.loop
 		)
-	
-	def do_thousandRounds(self, arg):
-		for i in range(0, 1000):
-			sleep(0.05)
-			self.do_sendState(None)
 
 async def handler(game: Game, queue: asyncio.queues.Queue, mgr: ConnectionMgr):
 	while True:
 		cmd, arg = await queue.get()
 		match cmd:
-			case("sendState"):
-				turn = game.turn()
-				send_thing = {
-					"type" : "gameState",
-					"state": game.getState(),
-					"turn": "Jeffie" # turn
-				}
-				print(f"broadcasting {send_thing}")
-				await mgr.broadcast(send_thing)
-
-			case("printState"):
-				print(game.getState())
-
 			case("printConnections"):
 				print(mgr.connections)
 
