@@ -23,7 +23,8 @@ sequenceDiagram
         CF->>CB: URL, username, route
         CB->>+SB: username, route
         Note over SB:Generate UUID
-        SB->>SF: username, UUID
+        SB->>+SF: username, UUID
+        SF-->>-SB: (optional) initial client state
         SB->>page: New user
         SB->>-CB: recevied registration
     end
@@ -44,4 +45,19 @@ sequenceDiagram
 ```
 
 Now lets define the format of each message sent internally and over the websocket connection:
-- The registration packet
+- The registration packet (2):
+```json
+{
+    "action": "register",
+    "name": username,
+    "room": route
+}
+```
+- The registration response (5):
+```json
+{
+	"type": "regResp",
+	"msg": Any, // optional
+})
+```
+It is conceivable that you may want to send some sort of initial state to each player and only once. For that reason, the regResp message both exists and has the optional field `'msg'` that can be filled with any message that 
