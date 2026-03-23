@@ -3,9 +3,8 @@
 Since the purpose of this project is to enable various implementations, we need to define some sort of protocol that all implementations must follow. To some extent, this entire project would then be 'an implementation' of that protocol. However, not everything in this project is a part of this specification. For example, the frontend that one can visit to see the current state is not specified anywhere.
 
 ## Structure / architecture
-Now this protocol presupposes two main parts: a client and a server. Both the client and the server have a frontend and a backend and both work in completely different ways. The server is the authority, so we will define the manner in which the server works as the main 
+Now this protocol presupposes two main parts: a client and a server. Both the client and the server have a frontend and a backend and both work in completely different ways. The server is the authority, so we will define the manner in which the server works perhaps a little arbitrarily, and we expect every client to follow this. Below is a diagramme of the structure and how each part corresponds to other parts
 
-## test
 ```mermaid
 sequenceDiagram
     box Gray Server
@@ -18,7 +17,8 @@ sequenceDiagram
     participant CF as Implementation
     end
 
-    critical registration
+    Note over page, CF: Registration protocol
+    critical
         CF->>CB: URL, username, route
         CB->>+SB: username, route
         Note over SB:Generate UUID
@@ -28,6 +28,7 @@ sequenceDiagram
     end
 
     loop
+        Note over page, CF: Main communication loop
         SF->>+SB: UUID: state, request
         Note over SB:Find connection associated w/ UUID
         SB->>+CB: state, request
@@ -39,7 +40,4 @@ sequenceDiagram
         SF->>page: state
         Note over SF: Determine next request
     end
-    
-
-    
 ```
