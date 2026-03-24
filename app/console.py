@@ -31,6 +31,17 @@ class Console(cmd.Cmd):
 			self.queue.put(("printConnections", arg)),
 			self.loop
 		)
+	
+	def do_broadcast(self, arg):
+		"""
+		usage: broadcast <message>
+		
+		send <message> to all connected clients.
+		"""
+		asyncio.run_coroutine_threadsafe(
+			self.queue.put(("broadcast", arg)),
+			self.loop
+		)
 
 async def handler(game: Game, queue: asyncio.queues.Queue, mgr: ConnectionMgr):
 	while True:
@@ -38,6 +49,9 @@ async def handler(game: Game, queue: asyncio.queues.Queue, mgr: ConnectionMgr):
 		match cmd:
 			case("printConnections"):
 				print(mgr.connections)
-
+			case("broadcast"):
+				await mgr.broadcast({
+					"type": "test"
+				})
 			case _:
 				raise NotImplementedError(f"Error: called {cmd} which is not implemented in the handler function")

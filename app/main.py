@@ -109,7 +109,7 @@ async def read_root(request: Request):
 	return templates.TemplateResponse("index.html", {
 		"request": request,
 		"title": "FastAPI Game",
-		"players" : game.state["playerNames"]
+		"players" : game.playerNames
 	})
 
 # TRANSPORT LAYER
@@ -147,7 +147,8 @@ async def websocket_endpoint(ws: WebSocket):
 	connectedUser.uname(regPacket.name)
 
 	# MAKE THIS CONDITIONAL
-	connectedUser.route(game.parsePacket)
+	# which function to execute when the user receives a packet
+	connectedUser.route(game.parseMessage)
 
 	# we send a response to the user
 	await ws.send_json({

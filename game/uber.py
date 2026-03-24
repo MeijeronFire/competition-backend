@@ -23,6 +23,8 @@ class RegisterPacket(BaseMessage):
 
 
 class Uber(Game):
-    async def parsePacket(self, packet: str, uuid: UUID):
-        return
+    def __init__(self):
+        super().__init__()
+    def parseMessage(self, msg: str, uuid: UUID):
+        print(f"Got packet: {msg}")
         

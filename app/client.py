@@ -10,14 +10,19 @@ class Client():
         self.uuid = uuid4()
         self.userName = "FooBar"
         self.ws = ws
-        self.handleMsg: Callable
+        self._listener: Callable
     
+    def handleMsg(self, msg: str):
+        if self._listener == None:
+            raise NotImplementedError("You have not specified the listener")
+        self._listener(msg, self.uuid)
+
     # set username of client
     def uname(self, username: str):
         self.userName = username
     
     def route(self, listener: Callable):
-        self.handleMsg = listener
+        self._listener = listener
     
     def __str__(self) -> str:
         return self.userName
