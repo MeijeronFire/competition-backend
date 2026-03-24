@@ -53,11 +53,38 @@ Now lets define the format of each message sent internally and over the websocke
     "room": route
 }
 ```
-- The registration response (5):
+as defined in [verify.py](/app/verify.py):
+```py
+class RegisterPacket(BaseMessage):
+    action: str = "register"
+    name: str
+    room: str
+```
+- The registration response (6):
 ```json
 {
 	"type": "regResp",
 	"msg": Any, // optional
-})
+}
 ```
-It is conceivable that you may want to send some sort of initial state to each player and only once. For that reason, the regResp message both exists and has the optional field `'msg'` that can be filled with any message that 
+It is conceivable that you may want to send some sort of initial state to each player and only once. For that reason, the regResp message both exists and has the optional field `'msg'` that can be filled with any message, specified by the game server. Note that any game server may have its own specification on which messages are expected and in which format.
+
+- Main loop requests (8)
+These requests are completely dependant on the specification of the game. Here is an example
+```json
+{
+    "type": "turn",
+    "state": {
+        ...
+    }
+}
+```
+- Main loop request responses (11)
+Once again dependant on different specifications, but here is another format example. You should be able to quickly see an overview of all accepted responses at the top of all implementations of [game.py](/game/game.py), with a neat pydantic setup.
+```json
+{
+    "choice": move //
+}
+```
+
+Note that the pair of 8 and 11 can change and do not have a set format. That depends on the game implemented. For example, the server may have a follow op request that is specific and wait for a response that suits that request. Summary: see game server specific documentation for (8) and (11)
