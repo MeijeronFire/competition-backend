@@ -3,7 +3,7 @@
 
 from .game import Game
 from random import randint
-from typing import Optional
+from typing import Optional, Generator
 from pydantic import BaseModel, ConfigDict
 from uuid import UUID
 """
@@ -25,6 +25,13 @@ class RegisterPacket(BaseMessage):
 class Uber(Game):
     def __init__(self):
         super().__init__()
-    def parseMessage(self, msg: str, uuid: UUID):
-        print(f"Got packet: {msg}")
-        
+        self.glasses = [0, 0, 0, 0, 0, 0]
+        self.points: dict[UUID, int] = {}
+
+    def parseMessage(self) -> Generator[dict, dict, None]:
+        # main game loop
+        result = {}
+        while 1:
+            msg = yield result
+            if msg["choice"] == "optOut":
+                self.points[self.UUIDs[self.turn()]]

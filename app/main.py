@@ -159,7 +159,7 @@ async def websocket_endpoint(ws: WebSocket):
 	# do this until the websocket disconnects unexpectedly
 	try: 
 		while 1:
-			data = await ws.receive_text()
+			data = await ws.receive_json()
 
 			resp = connectedUser.handleMsg(data) # handle the message
 			await ws.send_json(resp) # send response

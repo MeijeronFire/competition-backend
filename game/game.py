@@ -7,7 +7,14 @@ from uuid import UUID
 
 class Game:
     def __init__(self):
-        self.playerNames = []
+        self.playerNames: dict[UUID, str] = {}
+        self.UUIDs: list[UUID] = []
+        self.turnNr = 0
+
+    def turn(self):
+        if len(self.playerNames) == 0:
+            raise Exception("Error: no players, so cannot get turn.")
+        return self.turnNr % len(self.playerNames)
 
     # must also be filled by subclass
     def parsePacket(self, packet: str, uuid: UUID):
