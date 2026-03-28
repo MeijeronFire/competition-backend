@@ -16,6 +16,11 @@ class Game:
             raise Exception("Error: no players, so cannot get turn.")
         return self.turnNr % len(self.playerNames)
 
+    def turnUUID(self):
+        if len(self.playerNames) == 0:
+            raise Exception("Error: no players, so cannot get turn.")
+        return self.UUIDs[self.turn()]
+
     # must also be filled by subclass
     def parsePacket(self, packet: str, uuid: UUID):
         raise NotImplementedError

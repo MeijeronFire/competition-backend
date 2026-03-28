@@ -119,18 +119,8 @@ async def websocket_endpoint(ws: WebSocket):
 	connectedUser = await initClient(ws)
 	# interpret the first packet, which contains
 	# client-defined information
-	data = await connectedUser.ws.receive_json()
-	# DO NOT DO THIS
-	msg = data
-	try:
-		# msg = json.load(data)
-		pass
-	except json.JSONDecodeError:
-		print(f"client {connectedUser} sent a malformed first packet.")
-		await delClient(connectedUser)
-		return
+	msg = await connectedUser.ws.receive_json()
 
-	# so the registration contains correct json
 	try:
 		regPacket = RegisterPacket.model_validate(msg)
 	except ValidationError:
