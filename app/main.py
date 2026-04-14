@@ -16,6 +16,7 @@ import threading
 import asyncio
 import traceback
 from time import sleep
+from typing import Tuple, Dict
 
 # packet verification
 from pydantic import ValidationError
@@ -27,16 +28,40 @@ from app import console
 from app.connections import ConnectionMgr
 from app.client import Client
 from app.verify import *
-from game.uber import Uber
+from game.games import Uber
 
 
 
 game = Uber()
 cmdQueue = asyncio.Queue()
-connectionMgr = ConnectionMgr()
+# set the maxsize to 100, s.t. if the handling is less than traffic,
+# we block allowing new msgs
+msgQueue: asyncio.Queue[Tuple[Client, Dict]] = asyncio.Queue(maxsize = 100)
+mgr = ConnectionMgr()
 
-
-ALLOWED_ACTIONS = ["register"]
+async def connectionMaster():
+	while True:
+		await asyncio.sleep(3)
+		if len(game.UUIDs) < 2:
+			print(f"skipped. {len(game.UUIDs)} / 2")
+			continue
+		
+		# the client object whos turn it is
+		sentTo = mgr.clients[game.turnUUID()]
+		# tell client it is his turn
+		await sentTo.ws.send_json({
+			"type": "turn"
+		})
+		while True:
+			# until we get the message we want
+			sender, msg = await msgQueue.get()
+			if sender == sentTo:
+				break
+		
+		resp = game.parseMessage(msg)
+		if resp is not None:
+			# thus it is a dict, game.parseMessage(dict) -> dict | None
+			await sender.ws.send_json(resp)
 
 # utils
 def console_runner():
@@ -44,6 +69,7 @@ def console_runner():
 		console.Console(cmdQueue, loop).cmdloop()
 	except Exception:
 		traceback.print_exc()
+
 def log_async_error(task: asyncio.Task):
 	try:
 		task.result()
@@ -56,14 +82,19 @@ async def lifespan(app: FastAPI):
 	global loop
 	loop = asyncio.get_running_loop()
 	threading.Thread(target=console_runner, daemon=True).start()
-	task = asyncio.create_task(console.handler(game, cmdQueue, connectionMgr))
-	task.add_done_callback(log_async_error)
+	consoleTask = asyncio.create_task(console.handler(game, cmdQueue, mgr))
+	consoleTask.add_done_callback(log_async_error)
+
+	masterTask = asyncio.create_task(connectionMaster())
+	masterTask.add_done_callback(log_async_error)
 
 	yield
 	
 	# after
-	if task:
-		task.cancel()
+	if consoleTask:
+		consoleTask.cancel()
+	if masterTask:
+		masterTask.cancel()
 
 app = FastAPI(lifespan=lifespan)
 
@@ -79,7 +110,10 @@ async def initClient(ws: WebSocket) -> Client:
 	thisUser = Client(ws)
 
 	# add this client to the list of connections
-	connectionMgr.connect(ws, thisUser)
+	mgr.connect(ws, thisUser)
+
+	# add this client to the list of players
+	game.addPlayer(thisUser.uuid, thisUser.userName)
 	return thisUser
 
 # remove client
@@ -89,15 +123,9 @@ async def delClient(client: Client):
 	await ws.close()
 
 	# delete it from known connections
-	connectionMgr.disconnect(ws)
+	mgr.disconnect(ws)
 
-	# remove the class
-	del client
 	return
-
-# remove ASAP
-def somePrint(printable: str):
-	print(printable)
 
 #
 # API endpoints
@@ -138,7 +166,6 @@ async def websocket_endpoint(ws: WebSocket):
 
 	# MAKE THIS CONDITIONAL
 	# which function to execute when the user receives a packet
-	connectedUser.route(game.parseMessage)
 
 	# we send a response to the user
 	await ws.send_json({
@@ -150,9 +177,8 @@ async def websocket_endpoint(ws: WebSocket):
 	try: 
 		while 1:
 			data = await ws.receive_json()
-
-			resp = connectedUser.handleMsg(data) # handle the message
-			await ws.send_json(resp) # send response
+			print(f"We got data: {data}")
+			await msgQueue.put((connectedUser, data))
 	except WebSocketDisconnect:
 		# on disconnect run the manager disconnect hook
 		await delClient(connectedUser)

@@ -3,12 +3,15 @@
 
 from fastapi import WebSocket
 from app.client import Client
+from uuid import UUID
 import asyncio
 
 class ConnectionMgr:
     def __init__(self):
         # list of connections - should be live ones
         self.connections: dict[WebSocket, Client] = {}
+        # client by UUID
+        self.clients: dict[UUID, Client] = {}
         self.connectionlock = False
     
     def connect(self, ws: WebSocket, client: Client):
@@ -18,7 +21,8 @@ class ConnectionMgr:
             exit(0)
         # safe .append
         self.connections[ws] = client
-    
+        self.clients[client.uuid] = client
+
     def disconnect(self, ws):
         # safe .remove method
         self.connections.pop(ws)
