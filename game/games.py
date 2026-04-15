@@ -5,37 +5,10 @@ from random import randint
 from typing import Optional, Generator, Tuple
 from pydantic import BaseModel, ConfigDict, ValidationError
 from uuid import UUID
+import asyncio
 """
 Woop woop game layer
 """
-
-class gameCore:
-    def __init__(self):
-        self.playerNames: dict[UUID, str] = {}
-        self.UUIDs: list[UUID] = []
-        self.turnNr = 0
-    
-    def addPlayer(self, uuid: UUID, username: str):
-        self.UUIDs.append(uuid)
-        self.playerNames[uuid] = username
-
-    def turn(self):
-        if len(self.playerNames) == 0:
-            raise Exception("Error: no players, so cannot get turn.")
-        return self.turnNr % len(self.playerNames)
-
-    def turnUUID(self):
-        if len(self.playerNames) == 0:
-            raise Exception("Error: no players, so cannot get turn.")
-        return self.UUIDs[self.turn()]
-
-    # must also be filled by subclass
-    def parsePacket(self, packet: str, uuid: UUID):
-        raise NotImplementedError
-
-    # hooks to be filled by subclasses
-    def _onRegister(self):
-        raise NotImplementedError
 
 
 class moveMessage(BaseModel):
@@ -47,28 +20,52 @@ class fillMessage(BaseModel):
     amount: int
     model_config = ConfigDict(extra="allow")
 
-class Uber(gameCore):
-    def __init__(self):
-        super().__init__()
+class Uber():
+    def __init__(self) -> None:
         self.glasses = [0, 0, 0, 0, 0, 0]
         self.points: dict[UUID, int] = {}
         self.optOutPenalty = 300
-        self._parser = self._parseMessage()
-        next(self._parser)
+        self.playerNames: dict[UUID, str] = {}
+        self.UUIDs: list[UUID] = []
+        self.turnNr = 0
+
+        self._running = False
+        self._task: asyncio.Task[dict | None] | None = None
+        self._sendQueue: asyncio.Queue[dict | None] = asyncio.Queue()
+        self._recvQueue: asyncio.Queue[dict] = asyncio.Queue()
     
     def addPlayer(self, uuid: UUID, username: str):
         self.UUIDs.append(uuid)
         self.playerNames[uuid] = username
         self.points[uuid] = 0
 
-    def parseMessage(self, msg: dict) -> dict | None:
-        return self._parser.send(msg)
+    def turn(self):
+        if len(self.playerNames) == 0:
+            raise Exception("Error: no players, so cannot get turn.")
+        return self.turnNr % len(self.playerNames)
 
-    def _parseMessage(self) -> Generator[dict | None, dict, None]:
+    def turnUUID(self) -> UUID:
+        if len(self.playerNames) == 0:
+            raise Exception("Error: no players, so cannot get turn.")
+        return self.UUIDs[self.turn()]
+
+    async def start(self) -> None:
+        print("started _gameLoop")
+        self._task = asyncio.create_task(self._gameLoop())
+
+    async def stop(self) -> None:
+        if self._task:
+            self._task.cancel()
+            await asyncio.gather(self._task, return_exceptions=True)
+
+    async def parseMessage(self, msg: dict) -> dict | None:
+        await self._recvQueue.put(msg)
+        return await self._sendQueue.get()
+
+    async def _gameLoop(self) -> dict | None:
         # main game loop
-        result = None
         while 1:
-            data = yield result
+            data = await self._recvQueue.get()
             msg = moveMessage.model_validate(data)
             match msg.choice:
                 case "optOut":
@@ -76,6 +73,8 @@ class Uber(gameCore):
                     self.points[self.turnUUID()] += self.optOutPenalty
                     # now it is the next players turn
                     self.turnNr += 1
+                    print("turn ended")
+                    result = None
                 case "roll":
                         # throw the dice
                         recentThrow = randint(0, len(self.glasses) - 1)
@@ -85,13 +84,19 @@ class Uber(gameCore):
                             # and wait for their next move
                             self.points[self.turnUUID()] += self.glasses[recentThrow]
                             self.glasses[recentThrow] = 0
+                            result = None
+                            await self._sendQueue.put(None)
                             continue
                         
                         # now we can assume that that glass is empty
                         # thus we want to get a "fill" packet
-                        data = yield {
+                        # data = yield {
+                        #     "type": "fillAmount"
+                        # }
+                        await self._sendQueue.put({
                             "type": "fillAmount"
-                        }
+                        })
+                        data = await self._recvQueue.get()
                         try:
                             msg = fillMessage.model_validate(data)
                         except ValidationError:
@@ -99,9 +104,13 @@ class Uber(gameCore):
                         
                         # Now fill by that amount and go to next turn
                         self.glasses[recentThrow] += msg.amount
-                        print(f"got fillamount: {msg.amount}")
                         self.turnNr += 1
-
+                        print("turn ended")
+                        result = None
+                case "getState":
+                    await self._sendQueue.put({"type": "state", "state": self.glasses})
                 case _:
                     print(f"Illegal operation: chose {msg.choice}.")
                     result = None
+            # every path must have some sort of response to put
+            await self._sendQueue.put(None)

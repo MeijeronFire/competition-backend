@@ -58,6 +58,11 @@ class Console(cmd.Cmd):
 			self.queue.put(("oneFill", arg)),
 			self.loop
 		)
+	def do_points(self, arg):
+		asyncio.run_coroutine_threadsafe(
+			self.queue.put(("points", arg)),
+			self.loop
+		)
 
 async def handler(game: Uber, queue: asyncio.queues.Queue, mgr: ConnectionMgr):
 	while True:
@@ -65,6 +70,9 @@ async def handler(game: Uber, queue: asyncio.queues.Queue, mgr: ConnectionMgr):
 		match cmd:
 			case("printConnections"):
 				print(mgr.connections)
+			case("points"):
+				print(game.playerNames)
+				print(game.points)
 			case("oneTurn"):
 				await next(iter(mgr.connections)).send_json({"type": "turn"})
 				# raise NotImplementedError

@@ -5,8 +5,6 @@ from fastapi import WebSocket
 from app.client import Client
 from app.connections import ConnectionMgr
 
-from game.games import gameCore
-
 class gameHandler():
     def __init__(self, mgr: ConnectionMgr):
         pass

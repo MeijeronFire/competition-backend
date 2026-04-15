@@ -40,8 +40,9 @@ msgQueue: asyncio.Queue[Tuple[Client, Dict]] = asyncio.Queue(maxsize = 100)
 mgr = ConnectionMgr()
 
 async def connectionMaster():
+	await game.start()
 	while True:
-		await asyncio.sleep(3)
+		await asyncio.sleep(0.1)
 		if len(game.UUIDs) < 2:
 			print(f"skipped. {len(game.UUIDs)} / 2")
 			continue
@@ -50,17 +51,21 @@ async def connectionMaster():
 		sentTo = mgr.clients[game.turnUUID()]
 		# tell client it is his turn
 		await sentTo.ws.send_json({
-			"type": "turn"
+			"type": "turn",
+			"state": game.glasses
 		})
 		while True:
-			# until we get the message we want
-			sender, msg = await msgQueue.get()
-			if sender == sentTo:
+			while True:
+				# until we get the message we want
+				sender, msg = await msgQueue.get()
+				if sender == sentTo:
+					break
+			
+			resp = await game.parseMessage(msg)
+			if resp is None:
 				break
-		
-		resp = game.parseMessage(msg)
-		if resp is not None:
 			# thus it is a dict, game.parseMessage(dict) -> dict | None
+			print(f"sending {resp} to {sender.userName}")
 			await sender.ws.send_json(resp)
 
 # utils
@@ -112,8 +117,6 @@ async def initClient(ws: WebSocket) -> Client:
 	# add this client to the list of connections
 	mgr.connect(ws, thisUser)
 
-	# add this client to the list of players
-	game.addPlayer(thisUser.uuid, thisUser.userName)
 	return thisUser
 
 # remove client
@@ -163,7 +166,8 @@ async def websocket_endpoint(ws: WebSocket):
 	
 	# now we know we have a correct JSON packet so we can start interpreting the connection
 	connectedUser.uname(regPacket.name)
-
+	# add this client to the list of players
+	game.addPlayer(connectedUser.uuid, regPacket.name)
 	# MAKE THIS CONDITIONAL
 	# which function to execute when the user receives a packet
 
