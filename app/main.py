@@ -22,12 +22,12 @@ from typing import Tuple, Dict
 from pydantic import ValidationError
 
 # admin commands
-from app import console
+from app.console import console
 
 # self written modules
-from app.connections import ConnectionMgr
-from app.client import Client
-from app.verify import *
+from app.core.connections import ConnectionMgr
+from app.core.client import Client
+from app.models.verify import *
 from game.games import Uber
 
 

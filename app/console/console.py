@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
 
-from app.connections import ConnectionMgr
+from app.core.connections import ConnectionMgr
 from game.games import Uber
 from pprint import pprint
 import cmd

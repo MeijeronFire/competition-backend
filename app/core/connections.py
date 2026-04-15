@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Otto Crawford
 
 from fastapi import WebSocket
-from app.client import Client
+from app.core.client import Client
 from uuid import UUID
 import asyncio
 
