@@ -14,13 +14,13 @@ class ConnectionMgr:
         self.clients: dict[UUID, Client] = {}
         self.connectionlock = False
     
-    def connect(self, ws: WebSocket, client: Client):
+    def connect(self, client: Client):
         # don't allow further connection if it has been locked
         if self.connectionlock:
             print("Connection changes have been locked. Game must stop!")
             exit(0)
         # safe .append
-        self.connections[ws] = client
+        self.connections[client.ws] = client
         self.clients[client.uuid] = client
 
     def disconnect(self, ws):

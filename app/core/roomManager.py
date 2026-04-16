@@ -1,0 +1,2 @@
+class RoomManager():
+    pass

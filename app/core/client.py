@@ -5,6 +5,25 @@ from fastapi import WebSocket
 from typing import Callable, Generator, Tuple
 from uuid import uuid4, UUID
 
+# initialize client
+async def initClient(ws: WebSocket) -> Client:
+	# accept the connection
+	await ws.accept()
+
+	# initialize the client object
+	thisUser = Client(ws)
+
+	return thisUser
+
+# remove client
+async def delClient(client: Client):
+	# close the connection
+	ws = client.ws
+	await ws.close()
+
+	return
+
+
 class Client():
     def __init__(self, ws: WebSocket):
         self.uuid = uuid4()
