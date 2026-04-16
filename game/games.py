@@ -2,9 +2,9 @@
 # Copyright (C) 2026 Otto Crawford
 
 from random import randint
-from typing import Optional, Generator, Tuple
 from pydantic import BaseModel, ConfigDict, ValidationError
 from uuid import UUID
+from game.models import Game
 import asyncio
 """
 Woop woop game layer
@@ -23,14 +23,15 @@ class fillMessage(BaseModel):
 class Uber():
     def __init__(self) -> None:
         self.glasses = [0, 0, 0, 0, 0, 0]
+        self.genericState = self.glasses
         self.points: dict[UUID, int] = {}
-        self.optOutPenalty = 300
+        self.optOutPenalty = 200
         self.playerNames: dict[UUID, str] = {}
         self.UUIDs: list[UUID] = []
         self.turnNr = 0
 
         self._running = False
-        self._task: asyncio.Task[dict | None] | None = None
+        self._task: asyncio.Task[None] | None = None
         self._sendQueue: asyncio.Queue[dict | None] = asyncio.Queue()
         self._recvQueue: asyncio.Queue[dict] = asyncio.Queue()
     
@@ -50,7 +51,6 @@ class Uber():
         return self.UUIDs[self.turn()]
 
     async def start(self) -> None:
-        print("started _gameLoop")
         self._task = asyncio.create_task(self._gameLoop())
 
     async def stop(self) -> None:
@@ -62,7 +62,7 @@ class Uber():
         await self._recvQueue.put(msg)
         return await self._sendQueue.get()
 
-    async def _gameLoop(self) -> dict | None:
+    async def _gameLoop(self) -> None:
         # main game loop
         while 1:
             data = await self._recvQueue.get()
@@ -114,3 +114,6 @@ class Uber():
                     result = None
             # every path must have some sort of response to put
             await self._sendQueue.put(None)
+
+# compile time verification
+_check: Game = Uber()

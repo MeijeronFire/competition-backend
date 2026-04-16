@@ -3,40 +3,22 @@ import asyncio
 import traceback
 from fastapi import FastAPI
 from typing import Tuple, Dict
+from uuid import UUID
 
 from game import Uber 
 
 from app.core import Client
 from app.core import ConnectionMgr
+from app.core import RoomManager
+from app.core import Sender
 
-async def connectionMaster(game, mgr, msgQueue):
-	await game.start()
+async def gameSupervisor(app, rMgr: RoomManager):
+	uber = rMgr.create("uber")
+	await rMgr.rooms[uber].run()
 	while True:
-		await asyncio.sleep(2)
-		if len(game.UUIDs) < 2:
-			print(f"skipped. {len(game.UUIDs)} / 2")
-			continue
-		
-		# the client object whos turn it is
-		sentTo = mgr.clients[game.turnUUID()]
-		# tell client it is his turn
-		await sentTo.ws.send_json({
-			"type": "turn",
-			"state": game.glasses
-		})
-		while True:
-			while True:
-				# until we get the message we want
-				sender, msg = await msgQueue.get()
-				if sender == sentTo:
-					break
-			
-			resp = await game.parseMessage(msg)
-			if resp is None:
-				break
-			# thus it is a dict, game.parseMessage(dict) -> dict | None
-			print(f"sending {resp} to {sender.userName}")
-			await sender.ws.send_json(resp)
+		asyncio.sleep(10)
+		print("slept for 10 seconds :)")
+	
 
 def log_async_error(task: asyncio.Task):
 	try:
@@ -46,20 +28,26 @@ def log_async_error(task: asyncio.Task):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-	game = Uber()
 	# set the maxsize to 100, s.t. if the handling is less than traffic,
 	# we block allowing new msgs
-	msgQueue: asyncio.Queue[Tuple[Client, Dict]] = asyncio.Queue(maxsize = 100)
-	mgr = ConnectionMgr()
+	# inbox: asyncio.Queue[Tuple[Client, Dict]] = asyncio.Queue(maxsize = 100)
+	outbox: asyncio.Queue[Tuple[UUID, Dict]] = asyncio.Queue(maxsize=100)
+	app.state.outbox = outbox
+	rMgr = RoomManager(outbox)
+	cMgr = ConnectionMgr()
+	app.state.rMgr = rMgr
+	app.state.cMgr = cMgr
 
-	app.state.msgQueue = msgQueue
-	app.state.mgr = mgr
-	app.state.game = game
+	gameSupervisorTask = asyncio.create_task(gameSupervisor(app, rMgr))
+	gameSupervisorTask.add_done_callback(log_async_error)
 
-	masterTask = asyncio.create_task(connectionMaster(game, mgr, msgQueue))
-	masterTask.add_done_callback(log_async_error)
+	# now we instantiate the sender postoffice!
+	sender = Sender(outbox, cMgr)
+	await sender.start()
 
 	yield
 	
-	if masterTask:
-		masterTask.cancel()
+	await sender.stop()
+
+	if gameSupervisorTask:
+		gameSupervisorTask.cancel()
