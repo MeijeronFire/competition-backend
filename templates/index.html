@@ -12,7 +12,10 @@
     <p>Number of players: {{ player_count }}</p>
 
     <ul>
-        Raah
+        {% for i in stats.allRooms %}
+            {{ stats.rooms[i].game.playerNames }}
+            {{ stats.rooms[i].game.points }}
+        {% endfor %}
     </ul>
 
 </body>

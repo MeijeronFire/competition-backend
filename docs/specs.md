@@ -99,3 +99,30 @@ In the webserver, we expect the listener function that is tied to every connecte
 In other words, the game can be treated and can act asif it is almost unrelated to the rest of the code, because it runs through its own code linearly. For example, we are in an infinite loop. At the top we put `msg = yield result`. This means we 'return' a computed `result`, and we read some parameter named `msg`. Depending on what msg contains, we compute this result and go back to the top of the loop, *or* we enter a new loop that yields something like `msg = yield "request clarification"`, with some more logic and a conditional break if "clarification" is provided.
 
 A complete explanation of how generators work is not included here, of course, but this should hopefully provide an insight in how to program implementations of `game.py`.
+
+### design philosophy
+This program is completely asynchronous. Every part of it should be viewed as some sort of seperate entity that accesses a shared state. This state should be limited in size as much as possible. Communication between parts is done by pushing and retrieving items in queues. 
+
+The smallest part in this program we from now on refer to as an "actor". An actor will be defined later (TODO), but has the following general setup:
+```py
+class Actor:
+    def __init__(self):
+        self.queue = asyncio.Queue()
+        self._task: asyncio.Task[dict | None] | None = None
+
+    async def start(self) -> None:
+        self._task = asyncio.create_task(self._loop())
+
+    async def stop(self) -> None:
+        if self._task:
+            self._task.cancel()
+            await self._task
+    
+    async def _loop(self, dict) -> None:
+        while True:
+            input = await self.queue.get()
+            ... # some handling function
+            self.queue.task_done()
+```
+
+There are a few actors: one will be for sending outgoing messages (so push something like `uuid: msg` to the queue) and every game will have one.
