@@ -1,22 +1,20 @@
-from fastapi import WebSocket, Request, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, Request, WebSocketDisconnect
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.main import app
-from app.main import mgr
-from app.main import game
 from app.core.client import initClient, delClient
 from app.models.verify import RegisterPacket
 from pydantic import ValidationError
 
+router = APIRouter()
 
 templates = Jinja2Templates(directory="templates")
-app.mount("/static", StaticFiles(directory="static"), name="static")
+router.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 ## HTML endpoint
-@app.get("/", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {
         "request": request,
@@ -24,11 +22,11 @@ async def read_root(request: Request):
     })
 
 # TRANSPORT LAYER
-@app.websocket("/ws")
+@router.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
     # after this point, never access the websocket object directly
     connectedUser = await initClient(ws)
-    mgr.connect(connectedUser)
+    ws.app.state.mgr.connect(connectedUser)
     # interpret the first packet, which contains
     # client-defined information
     msg = await connectedUser.ws.receive_json()
@@ -48,7 +46,7 @@ async def websocket_endpoint(ws: WebSocket):
     # now we know we have a correct JSON packet so we can start interpreting the connection
     connectedUser.uname(regPacket.name)
     # add this client to the list of players
-    game.addPlayer(connectedUser.uuid, regPacket.name)
+    ws.app.state.game.addPlayer(connectedUser.uuid, regPacket.name)
     # MAKE THIS CONDITIONAL
     # which function to execute when the user receives a packet
 
@@ -63,10 +61,10 @@ async def websocket_endpoint(ws: WebSocket):
         while 1:
             data = await ws.receive_json()
             print(f"We got data: {data}")
-            await msgQueue.put((connectedUser, data))
+            await ws.app.state.msgQueue.put((connectedUser, data))
     except WebSocketDisconnect:
         # on disconnect run the manager disconnect hook
         await delClient(connectedUser)
         # delete it from known connections
-        mgr.disconnect(ws)
+        ws.app.state.mgr.disconnect(ws)
         return

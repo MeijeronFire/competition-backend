@@ -2,12 +2,17 @@ from contextlib import asynccontextmanager
 import asyncio
 import traceback
 from fastapi import FastAPI
-import threading
+from typing import Tuple, Dict
 
-async def connectionMaster(game, mgr):
+from game import Uber 
+
+from app.core import Client
+from app.core import ConnectionMgr
+
+async def connectionMaster(game, mgr, msgQueue):
 	await game.start()
 	while True:
-		await asyncio.sleep(0.1)
+		await asyncio.sleep(2)
 		if len(game.UUIDs) < 2:
 			print(f"skipped. {len(game.UUIDs)} / 2")
 			continue
@@ -39,21 +44,22 @@ def log_async_error(task: asyncio.Task):
 	except:
 		traceback.print_exc()
 
-cmdQueue = asyncio.Queue()
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-	global loop
-	loop = asyncio.get_running_loop()
-	threading.Thread(target=console_runner, daemon=True).start()
+	game = Uber()
+	# set the maxsize to 100, s.t. if the handling is less than traffic,
+	# we block allowing new msgs
+	msgQueue: asyncio.Queue[Tuple[Client, Dict]] = asyncio.Queue(maxsize = 100)
+	mgr = ConnectionMgr()
 
-	masterTask = asyncio.create_task(connectionMaster(app))
+	app.state.msgQueue = msgQueue
+	app.state.mgr = mgr
+	app.state.game = game
+
+	masterTask = asyncio.create_task(connectionMaster(game, mgr, msgQueue))
 	masterTask.add_done_callback(log_async_error)
 
 	yield
 	
-	# after
-	if consoleTask:
-		consoleTask.cancel()
 	if masterTask:
 		masterTask.cancel()
