@@ -5,4 +5,6 @@ The system of sending and receiving works but it not flexible in the slightest. 
 To this end we are going to:
 1. enable the dynamic creation of 'game agents'. Aside from an interface for a client (Client) and a class for keeping track of which clients there are and their respective methods (ConnectionMgr), we are going to need a way to keep track of which games there are (roomManager). Here we bind clients to rooms (read: a small asynchronous agent), startup rooms and we create and destroy queues.
 
+2. Something else I forgot
+
 oh also: update the css, it doesn't work atm.
