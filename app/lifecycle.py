@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Otto Crawford
+
 from contextlib import asynccontextmanager
 import asyncio
 import traceback
@@ -14,6 +17,8 @@ from app.core import Sender
 
 async def gameSupervisor(app, rMgr: RoomManager):
 	uber = rMgr.create("uber")
+	othello = rMgr.create("othello")
+	await rMgr.rooms[othello].run()
 	await rMgr.rooms[uber].run()
 	while True:
 		asyncio.sleep(10)

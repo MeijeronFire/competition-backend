@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Otto Crawford
+
 from fastapi import APIRouter, WebSocket, Request, WebSocketDisconnect
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
@@ -15,13 +18,14 @@ templates = Jinja2Templates(directory="templates")
 router.mount("/static", StaticFiles(directory="static"), name="static")
 
 
+
 ## HTML endpoint
 @router.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {
         "request": request,
         "title": "FastAPI Game",
-        "stats": request.app.state.rMgr
+        "stats": request.app.state.rMgr,
     })
     # return "Raaaah"
 
@@ -75,7 +79,7 @@ async def websocket_endpoint(ws: WebSocket, room_id: str):
 
     # do this until the websocket disconnects unexpectedly
     try: 
-        while 1:
+        while True:
             data = await ws.receive_json()
             print(f"We got data: {data}")
             await room.inbox.put((connectedUser.uuid, data))
@@ -83,5 +87,5 @@ async def websocket_endpoint(ws: WebSocket, room_id: str):
         # on disconnect run the manager disconnect hook
         await delClient(connectedUser)
         # delete it from known connections
-        ws.app.state.mgr.disconnect(ws)
+        ws.app.state.cMgr.disconnect(ws)
         return

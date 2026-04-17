@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Otto Crawford
+
 from pydantic import BaseModel, ConfigDict
 
 class BaseMessage(BaseModel):
