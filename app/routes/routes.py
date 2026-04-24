@@ -42,8 +42,10 @@ async def websocket_endpoint(ws: WebSocket, room_id: str):
     try:
         regPacket = RegisterPacket.model_validate(msg)
     except ValidationError:
+        # TODO: name is incorrect. Instantly find name of client when registering
         print(f"client {connectedUser} set an incorrect JSON registration packet.")
         # TODO: make this more verbose to explain which packet would be expected
+        print(f"sending error to {ws.client}")
         await ws.send_json({
             "type": "error",
             "errorType": "Incorrect JSON registration packet sent"
@@ -56,7 +58,7 @@ async def websocket_endpoint(ws: WebSocket, room_id: str):
         room: GameActor = ws.app.state.rMgr.rooms[int(room_id)]
     except (KeyError, ValueError):
         print(f"client {connectedUser} set an incorrect JSON registration packet.")
-        # TODO: make this more verbose to explain which packet would be expected
+        # TODO: make this more verbose to explain the room is incorrect
         await ws.send_json({
             "type": "error",
             "errorType": "Incorrect JSON registration packet sent"

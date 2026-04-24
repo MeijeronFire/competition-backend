@@ -31,7 +31,7 @@ class Example():
         self.playerNames: dict[UUID, str] = {}
         self.points: dict[UUID, int] = {}
         self.turnNr = 0
-        self._nr: int
+        self._nr: int = randint(1, 9)
         self.minPlayers = 2
 
     async def start(self) -> None:
@@ -52,6 +52,9 @@ class Example():
     def _newTurn(self) -> None:
         self._nr = randint(1, 9)
 
+    # the fact that this is asynchronous is mostly an interface
+    # constraint, but the game may want to work with queues
+    # or some other way to maintain state between function calls.
     async def parseMessage(self, data: dict) -> dict | None:
         msg = GuessMsg.model_validate(data)
         if msg.choice != "guess":
@@ -60,9 +63,16 @@ class Example():
                 "errorType": f"No valid choice provided. Got {msg.choice}, expected `guess'"
             }
         if msg.guess == self._nr:
+            print(self.points)
+            print(self.turnUUID())
             self.points[self.turnUUID()] += 1
+            # this may trigger twice if the last player in the turn 
+            # guesses correctly, but this should not cause any
+            # side effects!
+            self._newTurn()
         
         # turn is over, go to next player
+        print("4")
         self.turnNr += 1
 
         # if every player has gone:

@@ -38,6 +38,7 @@ class GameActor():
                 while True:
                     # until we get the message we want
                     sender, msg = await self.inbox.get()
+                    # print(f"{sentTo}: Got {sender}, {msg}")
                     if sender == sentTo:
                         break
                 

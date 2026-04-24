@@ -10,4 +10,3 @@ class BaseMessage(BaseModel):
 class RegisterPacket(BaseMessage):
     action: str = "register"
     name: str
-    room: str
