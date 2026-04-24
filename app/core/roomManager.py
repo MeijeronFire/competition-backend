@@ -5,7 +5,7 @@ import asyncio
 from uuid import UUID
 
 from game import GameActor
-from game import Uber, Othello
+from game import Uber, Othello, Example
 
 from random import randint
 
@@ -19,7 +19,8 @@ class RoomManager():
         # THIS IS BAD
         self.games = {
             "uber": Uber,
-            "othello": Othello
+            "othello": Othello,
+            "example": Example
         }
     def create(self, game: str) -> int:
         room_id = randint(10000, 99999)

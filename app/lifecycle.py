@@ -16,12 +16,14 @@ from app.core import RoomManager
 from app.core import Sender
 
 async def gameSupervisor(app, rMgr: RoomManager):
+	tasks = []
 	uber = rMgr.create("uber")
-	othello = rMgr.create("othello")
-	await rMgr.rooms[othello].run()
-	await rMgr.rooms[uber].run()
+	example = rMgr.create("example")
+	# TODO: move the task creation to RoomManager rather than here
+	tasks.append(asyncio.create_task(rMgr.rooms[example].run()))
+	tasks.append(asyncio.create_task(rMgr.rooms[example].run()))
 	while True:
-		asyncio.sleep(10)
+		await asyncio.sleep(10)
 		print("slept for 10 seconds :)")
 	
 

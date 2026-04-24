@@ -21,8 +21,8 @@ class GameActor():
         await self.game.start()
         while True:
             await asyncio.sleep(2)
-            if len(self.game.UUIDs) < 2:
-                print(f"skipped. {len(self.game.UUIDs)} / 2")
+            if len(self.game.UUIDs) < self.game.minPlayers:
+                print(f"{self.game.__str__()}: skipped. {len(self.game.UUIDs)} / 2")
                 continue
             
             # the client object whos turn it is

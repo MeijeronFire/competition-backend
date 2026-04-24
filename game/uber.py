@@ -22,6 +22,8 @@ class fillMessage(BaseModel):
 
 class Uber():
     def __init__(self) -> None:
+        self.minPlayers = 2
+        
         self.glasses = [0, 0, 0, 0, 0, 0]
         self.genericState = self.glasses
         self.points: dict[UUID, int] = {}
@@ -58,8 +60,8 @@ class Uber():
             self._task.cancel()
             await asyncio.gather(self._task, return_exceptions=True)
 
-    async def parseMessage(self, msg: dict) -> dict | None:
-        await self._recvQueue.put(msg)
+    async def parseMessage(self, data: dict) -> dict | None:
+        await self._recvQueue.put(data)
         return await self._sendQueue.get()
 
     async def _gameLoop(self) -> None:
@@ -117,21 +119,3 @@ class Uber():
 
 # compile time verification
 _check: Game = Uber()
-
-class Othello():
-    def __init__(self):
-        UUIDs: list[UUID] = []
-        genericState: list = []
-        playerNames: dict[UUID, str] = {}
-        points: dict[UUID, int] = {}
-
-    async def start(self) -> None:
-        ...
-    async def stop(self) -> None:
-        ...
-    def turnUUID(self) -> UUID:
-        ...
-    def addPlayer(self, uuid: UUID, username: str) -> None:
-        ...
-    async def parseMessage(self, msg: dict) -> dict | None:
-        ...
