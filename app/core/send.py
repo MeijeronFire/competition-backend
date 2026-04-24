@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Otto Crawford
+
 from fastapi import WebSocket
 from app.models.primitives import Actor
 from app.core import ConnectionMgr
