@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Otto Crawford
+
 import asyncio
 from abc import ABC, abstractmethod
 
@@ -13,7 +16,7 @@ class Actor(ABC):
         if self._task:
             self._task.cancel()
             await self._task
-    
+
     @abstractmethod
     async def _loop(self) -> None:
         while True:

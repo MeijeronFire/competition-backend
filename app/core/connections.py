@@ -3,7 +3,6 @@
 
 from fastapi import WebSocket
 import asyncio
-from typing import Callable, Generator, Tuple
 from uuid import uuid4, UUID
 
 # initialize client

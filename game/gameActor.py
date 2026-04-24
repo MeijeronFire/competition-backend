@@ -20,9 +20,12 @@ class GameActor():
     async def run(self):
         await self.game.start()
         while True:
-            await asyncio.sleep(5)
-            if len(self.game.UUIDs) < 2:
-                print(f"skipped. {len(self.game.UUIDs)} / 2")
+            # TODO: make this depend on other factors!
+            await asyncio.sleep(0.01)
+            print(self.game.points)
+            print(self.game.playerNames)
+            if len(self.game.UUIDs) < self.game.minPlayers:
+                print(f"{self.game.__str__()}: skipped. {len(self.game.UUIDs)} / 2")
                 continue
             
             # the client object whos turn it is
@@ -38,6 +41,7 @@ class GameActor():
                 while True:
                     # until we get the message we want
                     sender, msg = await self.inbox.get()
+                    # print(f"{sentTo}: Got {sender}, {msg}")
                     if sender == sentTo:
                         break
                 

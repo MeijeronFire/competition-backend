@@ -7,4 +7,6 @@ To this end we are going to:
 
 2. Something else I forgot
 
+3. make it so deregistering on errors happens automatically
+
 oh also: update the css, it doesn't work atm.

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Otto Crawford
+
 from contextlib import asynccontextmanager
 import asyncio
 import traceback
@@ -12,19 +15,23 @@ from app.core import ConnectionMgr
 from app.core import RoomManager
 from app.core import Sender
 
-async def gameSupervisor(app, rMgr: RoomManager):
-	uber = rMgr.create("uber")
-	await rMgr.rooms[uber].run()
-	while True:
-		asyncio.sleep(10)
-		print("slept for 10 seconds :)")
-	
-
 def log_async_error(task: asyncio.Task):
 	try:
 		task.result()
 	except:
 		traceback.print_exc()
+
+async def gameSupervisor(app, rMgr: RoomManager):
+	tasks: list[asyncio.Task] = []
+	# uber = rMgr.create("uber")
+	example = rMgr.create("example")
+	# TODO: move the task creation to RoomManager rather than here
+	tasks.append(asyncio.create_task(rMgr.rooms[example].run()))
+	tasks[0].add_done_callback(log_async_error)
+
+	while True:
+		await asyncio.sleep(10)
+		# print("slept for 10 seconds :)")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
