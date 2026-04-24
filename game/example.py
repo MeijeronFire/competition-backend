@@ -75,9 +75,8 @@ class Example():
         print("4")
         self.turnNr += 1
 
-        # if every player has gone:
-        if self.turnNr == len(self.UUIDs):
-            self._newTurn()
-            self.turnNr = 1
+        # if all players have gone we reset the turn counter
+        if self.turnNr == 2:
+            self.turnNr = 0
 
 _check: Game = Example()

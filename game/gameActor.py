@@ -20,7 +20,10 @@ class GameActor():
     async def run(self):
         await self.game.start()
         while True:
-            await asyncio.sleep(2)
+            # TODO: make this depend on other factors!
+            await asyncio.sleep(0.01)
+            print(self.game.points)
+            print(self.game.playerNames)
             if len(self.game.UUIDs) < self.game.minPlayers:
                 print(f"{self.game.__str__()}: skipped. {len(self.game.UUIDs)} / 2")
                 continue
