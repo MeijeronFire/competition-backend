@@ -21,7 +21,7 @@ class GameActor():
         await self.game.start()
         while True:
             # TODO: make this depend on other factors!
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(1)
             print(self.game.points)
             print(self.game.playerNames)
             if len(self.game.UUIDs) < self.game.minPlayers:
