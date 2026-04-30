@@ -48,7 +48,7 @@ class Example():
         self.UUIDs.append(uuid)
         self.playerNames[uuid] = username
         self.points[uuid] = 0
-    
+
     def _newTurn(self) -> None:
         self._nr = randint(1, 9)
 
@@ -72,7 +72,6 @@ class Example():
             self._newTurn()
         
         # turn is over, go to next player
-        print("4")
         self.turnNr += 1
 
         # if all players have gone we reset the turn counter

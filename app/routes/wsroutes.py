@@ -1,10 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
 
-from fastapi import APIRouter, WebSocket, Request, WebSocketDisconnect
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.core.connections import initClient, delClient
 from app.core import RoomManager
@@ -14,20 +11,10 @@ from pydantic import ValidationError
 
 router = APIRouter()
 
-templates = Jinja2Templates(directory="templates")
-router.mount("/static", StaticFiles(directory="static"), name="static")
-
-
-
-## HTML endpoint
-@router.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "title": "FastAPI Game",
-        "stats": request.app.state.rMgr,
-    })
-    # return "Raaaah"
+# iws = interface websocket
+@router.get("/ws/interface")
+async def control_websocket(iws: WebSocket):
+    pass
 
 # TRANSPORT LAYER
 @router.websocket("/ws/{room_id}")
