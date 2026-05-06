@@ -9,7 +9,7 @@ templates = Jinja2Templates(directory="templates")
 ## HTML endpoint
 @router.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    return templates.TemplateResponse("item.html", {
+    return templates.TemplateResponse("home.html", {
         "request": request,
         "title": "FastAPI Game",
         "stats": request.app.state.rMgr,
