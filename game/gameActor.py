@@ -6,13 +6,14 @@ from app.core import roomManager
 from game.models import Game
 from uuid import UUID
 
+
 class GameActor():
     def __init__(
-            self,
-            game: Game,
-            inbox: asyncio.Queue[tuple[UUID, dict]],
-            outbox: asyncio.Queue[tuple[UUID, dict]]
-        ):
+        self,
+        game: Game,
+        inbox: asyncio.Queue[tuple[UUID, dict]],
+        outbox: asyncio.Queue[tuple[UUID, dict]]
+    ):
         self.game = game
         self.inbox = inbox
         self.outbox = outbox
@@ -27,7 +28,7 @@ class GameActor():
             if len(self.game.UUIDs) < self.game.minPlayers:
                 print(f"{self.game.__str__()}: skipped. {len(self.game.UUIDs)} / 2")
                 continue
-            
+
             # the client object whos turn it is
             sentTo = self.game.turnUUID()
             # tell client it is his turn
@@ -44,7 +45,7 @@ class GameActor():
                     # print(f"{sentTo}: Got {sender}, {msg}")
                     if sender == sentTo:
                         break
-                
+
                 resp = await self.game.parseMessage(msg)
 
                 if resp is None:

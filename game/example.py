@@ -20,9 +20,12 @@ from game.models import Game
 #   "choice": "guess",
 #   "guess": 4
 # }
+
+
 class GuessMsg(BaseModel):
     choice: str
     guess: int
+
 
 class Example():
     def __init__(self):
@@ -36,6 +39,7 @@ class Example():
 
     async def start(self) -> None:
         pass
+
     async def stop(self) -> None:
         pass
 
@@ -66,16 +70,17 @@ class Example():
             print(self.points)
             print(self.turnUUID())
             self.points[self.turnUUID()] += 1
-            # this may trigger twice if the last player in the turn 
+            # this may trigger twice if the last player in the turn
             # guesses correctly, but this should not cause any
             # side effects!
             self._newTurn()
-        
+
         # turn is over, go to next player
         self.turnNr += 1
 
         # if all players have gone we reset the turn counter
         if self.turnNr == 2:
             self.turnNr = 0
+
 
 _check: Game = Example()

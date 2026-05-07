@@ -15,15 +15,17 @@ class moveMessage(BaseModel):
     choice: str
     model_config = ConfigDict(extra="allow")
 
+
 class fillMessage(BaseModel):
     choice: str = "fillAmount"
     amount: int
     model_config = ConfigDict(extra="allow")
 
+
 class Uber():
     def __init__(self) -> None:
         self.minPlayers = 2
-        
+
         self.glasses = [0, 0, 0, 0, 0, 0]
         self.genericState = self.glasses
         self.points: dict[UUID, int] = {}
@@ -36,7 +38,7 @@ class Uber():
         self._task: asyncio.Task[None] | None = None
         self._sendQueue: asyncio.Queue[dict | None] = asyncio.Queue()
         self._recvQueue: asyncio.Queue[dict] = asyncio.Queue()
-    
+
     def addPlayer(self, uuid: UUID, username: str):
         self.UUIDs.append(uuid)
         self.playerNames[uuid] = username
@@ -78,37 +80,39 @@ class Uber():
                     print("turn ended")
                     result = None
                 case "roll":
-                        # throw the dice
-                        recentThrow = randint(0, len(self.glasses) - 1)
-                        # if that glass is not empty
-                        if self.glasses[recentThrow] != 0:
-                            # penalize the player, empty the glass
-                            # and wait for their next move
-                            self.points[self.turnUUID()] += self.glasses[recentThrow]
-                            self.glasses[recentThrow] = 0
-                            result = None
-                            await self._sendQueue.put(None)
-                            continue
-                        
-                        # now we can assume that that glass is empty
-                        # thus we want to get a "fill" packet
-                        # data = yield {
-                        #     "type": "fillAmount"
-                        # }
-                        await self._sendQueue.put({
-                            "type": "fillAmount"
-                        })
-                        data = await self._recvQueue.get()
-                        try:
-                            msg = fillMessage.model_validate(data)
-                        except ValidationError:
-                            raise Exception("Error: Did not send correct fill message")
-                        
-                        # Now fill by that amount and go to next turn
-                        self.glasses[recentThrow] += msg.amount
-                        self.turnNr += 1
-                        print("turn ended")
+                    # throw the dice
+                    recentThrow = randint(0, len(self.glasses) - 1)
+                    # if that glass is not empty
+                    if self.glasses[recentThrow] != 0:
+                        # penalize the player, empty the glass
+                        # and wait for their next move
+                        self.points[self.turnUUID(
+                        )] += self.glasses[recentThrow]
+                        self.glasses[recentThrow] = 0
                         result = None
+                        await self._sendQueue.put(None)
+                        continue
+
+                    # now we can assume that that glass is empty
+                    # thus we want to get a "fill" packet
+                    # data = yield {
+                    #     "type": "fillAmount"
+                    # }
+                    await self._sendQueue.put({
+                        "type": "fillAmount"
+                    })
+                    data = await self._recvQueue.get()
+                    try:
+                        msg = fillMessage.model_validate(data)
+                    except ValidationError:
+                        raise Exception(
+                            "Error: Did not send correct fill message")
+
+                    # Now fill by that amount and go to next turn
+                    self.glasses[recentThrow] += msg.amount
+                    self.turnNr += 1
+                    print("turn ended")
+                    result = None
                 case "getState":
                     await self._sendQueue.put({"type": "state", "state": self.glasses})
                 case _:
@@ -116,6 +120,7 @@ class Uber():
                     result = None
             # every path must have some sort of response to put
             await self._sendQueue.put(None)
+
 
 # compile time verification
 _check: Game = Uber()
