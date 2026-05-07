@@ -6,10 +6,12 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from uuid import UUID
 from game.models import Game
 
+
 class moveMsg(BaseModel):
     choice: int
     row: int
     column: int
+
 
 class Othello():
     def __init__(self):
@@ -50,5 +52,6 @@ class Othello():
         match msg.choice:
             case _:
                 pass
+
 
 _check: Game = Othello()

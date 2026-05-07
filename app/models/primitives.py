@@ -4,6 +4,7 @@
 import asyncio
 from abc import ABC, abstractmethod
 
+
 class Actor(ABC):
     def __init__(self, queue):
         self.queue = asyncio.Queue()
@@ -21,5 +22,5 @@ class Actor(ABC):
     async def _loop(self) -> None:
         while True:
             input = await self.queue.get()
-            ... # some handling function
+            ...  # some handling function
             self.queue.task_done()

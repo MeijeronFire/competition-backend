@@ -11,18 +11,20 @@ from random import randint
 
 import traceback
 
+
 def log_async_error(task: asyncio.Task):
     try:
         task.result()
     except:
         traceback.print_exc()
 
+
 class RoomManager():
     def __init__(self, outbox: asyncio.Queue[tuple[UUID, dict]]):
         self.rooms: dict[int, GameActor] = {}
         self.allRooms: list[int] = []
         self.outbox = outbox
-        # THIS IS BAD 
+        # THIS IS BAD
         # THIS IS BAD
         # THIS IS BAD
         self.games = {

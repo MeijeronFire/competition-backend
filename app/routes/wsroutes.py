@@ -12,11 +12,15 @@ from pydantic import ValidationError
 router = APIRouter()
 
 # iws = interface websocket
+
+
 @router.get("/ws/interface")
 async def control_websocket(iws: WebSocket):
     pass
 
 # TRANSPORT LAYER
+
+
 @router.websocket("/ws/{room_id}")
 async def websocket_endpoint(ws: WebSocket, room_id: str):
     # after this point, never access the websocket object directly
@@ -30,7 +34,8 @@ async def websocket_endpoint(ws: WebSocket, room_id: str):
         regPacket = RegisterPacket.model_validate(msg)
     except ValidationError:
         # TODO: name is incorrect. Instantly find name of client when registering
-        print(f"client {connectedUser} set an incorrect JSON registration packet.")
+        print(
+            f"client {connectedUser} set an incorrect JSON registration packet.")
         # TODO: make this more verbose to explain which packet would be expected
         print(f"sending error to {ws.client}")
         await ws.send_json({
@@ -44,7 +49,8 @@ async def websocket_endpoint(ws: WebSocket, room_id: str):
     try:
         room: GameActor = ws.app.state.rMgr.rooms[int(room_id)]
     except (KeyError, ValueError):
-        print(f"client {connectedUser} set an incorrect JSON registration packet.")
+        print(
+            f"client {connectedUser} set an incorrect JSON registration packet.")
         # TODO: make this more verbose to explain the room is incorrect
         await ws.send_json({
             "type": "error",
@@ -52,7 +58,7 @@ async def websocket_endpoint(ws: WebSocket, room_id: str):
         })
         await ws.close()
         return
-    
+
     # now we know we have a correct JSON packet so we can start interpreting the connection
     connectedUser.uname(regPacket.name)
     # add this client to the list of players
@@ -67,7 +73,7 @@ async def websocket_endpoint(ws: WebSocket, room_id: str):
     })
 
     # do this until the websocket disconnects unexpectedly
-    try: 
+    try:
         while True:
             data = await ws.receive_json()
             print(f"We got data: {data}")
