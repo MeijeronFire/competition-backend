@@ -12,3 +12,9 @@ class BaseMessage(BaseModel):
 class RegisterPacket(BaseMessage):
     action: str = "register"
     name: str
+
+
+class LoginForm(BaseModel):
+    username: str
+    password: str
+    csrf: str
