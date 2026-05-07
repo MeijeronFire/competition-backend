@@ -6,7 +6,7 @@ Write-Output "This program comes with ABSOLUTELY NO WARRANTY; " `
       "This is free software, and you are welcome to redistribute it" `
       "under certain conditions;"
 
-.\.venv\bin\python -m uvicorn app:app `
+.\.venv\Scripts\python -m uvicorn app:app `
   --host 0.0.0.0 `
   --port 8000 `
   --ssl-keyfile key.pem `
