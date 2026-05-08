@@ -1,5 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Home{% endblock %}
 {% block content%}
-Test
+<!-- What to render for every room -->
+{% for i in rooms %}
+<div class="card border-primary mb-3" style="max-width: 20rem;">
+    <div class="card-header">{{ i.game.UUIDs|length }}/{{ i.game.minPlayers }}</div>
+    <div class="card-body">
+        <h4 class="card-title">{{ i.name }}</h4>
+        <p class="card-text">Not quite sure what to put here just yet</p>
+    </div>
+</div>
+{% endfor %}
 {% endblock %}

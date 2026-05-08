@@ -29,6 +29,7 @@ class GuessMsg(BaseModel):
 
 class Example():
     def __init__(self):
+        self.name = "Anker"
         self.UUIDs: list[UUID] = []
         self.genericState: list = []
         self.playerNames: dict[UUID, str] = {}
@@ -67,8 +68,8 @@ class Example():
                 "errorType": f"No valid choice provided. Got {msg.choice}, expected `guess'"
             }
         if msg.guess == self._nr:
-            print(self.points)
-            print(self.turnUUID())
+            # print(self.points)
+            # print(self.turnUUID())
             self.points[self.turnUUID()] += 1
             # this may trigger twice if the last player in the turn
             # guesses correctly, but this should not cause any
