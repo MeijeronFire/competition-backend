@@ -29,9 +29,7 @@ async def home(request: Request):
     request.session["csrf"] = generate_csrf()
     return templates.TemplateResponse("home.html", {
         "request": request,
-        "title": "FastAPI Game",
-        "stats": request.app.state.rMgr,
-        "csrf": request.session["csrf"]
+        "rooms": [request.app.state.rMgr.rooms[i] for i in request.app.state.rMgr.allRooms]
     })
     # return "Raaaah"
 
@@ -47,31 +45,28 @@ async def login(request: Request):
     return templates.TemplateResponse("login.html", {
         "request": request,
         "csrf": request.session["csrf"],
-        "errors": None
+        "errors": request.session.get("errors")
     })
 
 
 @router.post("/login", response_class=HTMLResponse)
 async def loginForm(request: Request, data: Annotated[LoginForm, Form()]):
+    # first clear existing errors
+    request.session["errors"] = None
     # first we check if the csrf tokens are correct
     errors: dict[str, str] = {}
 
     if not validate_csrf(request, data.csrf):
-        errors["csrf"] = "Invalid session. Refresh the page"
+        errors["csrf"] = "Invalid session. Try login again."
 
     if not is_user(data.username):
         errors["username"] = "Username does not exist"
     elif not validate_password(data.username, data.password):
         errors["password"] = "Password is not correct!"
 
-    # TODO: display errors to the user
     if errors:
-        request.session["csrf"] = generate_csrf()
-        return templates.TemplateResponse("login.html", {
-            "request": request,
-            "csrf": request.session["csrf"],
-            "errors": errors
-        })
+        request.session["errors"] = errors
+        return RedirectResponse(request.url_for("login"), status_code=303)
 
     print("Login OK!")
     request.session["user"] = data.username

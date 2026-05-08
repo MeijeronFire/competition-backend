@@ -17,16 +17,17 @@ class GameActor():
         self.game = game
         self.inbox = inbox
         self.outbox = outbox
+        self.name = game.name
 
     async def run(self):
         await self.game.start()
         while True:
             # TODO: make this depend on other factors!
             await asyncio.sleep(1)
-            print(self.game.points)
-            print(self.game.playerNames)
+            # print(self.game.points)
+            # print(self.game.playerNames)
             if len(self.game.UUIDs) < self.game.minPlayers:
-                print(f"{self.game.__str__()}: skipped. {len(self.game.UUIDs)} / 2")
+                # print(f"{self.game.__str__()}: skipped. {len(self.game.UUIDs)} / 2")
                 continue
 
             # the client object whos turn it is

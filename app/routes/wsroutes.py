@@ -76,7 +76,7 @@ async def websocket_endpoint(ws: WebSocket, room_id: str):
     try:
         while True:
             data = await ws.receive_json()
-            print(f"We got data: {data}")
+            # print(f"We got data: {data}")
             await room.inbox.put((connectedUser.uuid, data))
     except WebSocketDisconnect:
         # on disconnect run the manager disconnect hook

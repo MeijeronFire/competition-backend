@@ -15,6 +15,7 @@ class moveMsg(BaseModel):
 
 class Othello():
     def __init__(self):
+        self.name = "Example"
         self.UUIDs: list[UUID] = []
         self.genericState: list = [
             0, 0, 0, 0, 0, 0, 0, 0,
