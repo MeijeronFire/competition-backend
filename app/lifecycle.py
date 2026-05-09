@@ -24,13 +24,6 @@ def log_async_error(task: asyncio.Task):
 
 
 async def gameSupervisor(app, rMgr: RoomManager):
-    tasks: list[asyncio.Task] = []
-    # uber = rMgr.create("uber")
-    # TODO: move the task creation to RoomManager rather than here
-    example = rMgr.create("example")
-    tasks.append(asyncio.create_task(rMgr.rooms[example].run()))
-    tasks[0].add_done_callback(log_async_error)
-
     while True:
         await asyncio.sleep(10)
         # print("slept for 10 seconds :)")

@@ -4,9 +4,9 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.core.connections import initClient, delClient
-from app.core import RoomManager
 from game.gameActor import GameActor
 from app.models.verify import RegisterPacket
+from app.auth.session import is_authenticated
 from pydantic import ValidationError
 
 router = APIRouter()
@@ -17,8 +17,7 @@ router = APIRouter()
 @router.get("/ws/interface")
 async def control_websocket(iws: WebSocket):
     pass
-
-# TRANSPORT LAYER
+    # TRANSPORT LAYER
 
 
 @router.websocket("/ws/{room_id}")
