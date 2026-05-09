@@ -18,3 +18,19 @@ class LoginForm(BaseModel):
     username: str
     password: str
     csrf: str
+
+
+class DashRegMsg(BaseModel):
+    csrf: str
+
+
+class DashCreateMsg(BaseModel):
+    name: str
+
+
+class DashUpdateMsg(BaseModel):
+    pass
+
+
+class DashDeleteMsg(BaseModel):
+    room_id: int
