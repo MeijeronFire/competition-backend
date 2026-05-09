@@ -22,6 +22,7 @@ def log_async_error(task: asyncio.Task):
 class RoomManager():
     def __init__(self, outbox: asyncio.Queue[tuple[UUID, dict]]):
         self.rooms: dict[int, GameActor] = {}
+        self.tasks: dict[int, asyncio.Task] = {}
         self.allRooms: list[int] = []
         self.outbox = outbox
         # THIS IS BAD
@@ -41,4 +42,11 @@ class RoomManager():
         actor = GameActor(self.games[game](), inbox, self.outbox)
         self.rooms[room_id] = actor
         self.allRooms.append(room_id)
+        self.tasks[room_id] = asyncio.create_task(actor.run())
+        self.tasks[room_id].add_done_callback(log_async_error)
         return room_id
+
+    def delete(self, room_id: int) -> None:
+        self.tasks[room_id].cancel()
+        self.tasks.pop(room_id)
+        # maybe call some sort of destructor on the object itself?
