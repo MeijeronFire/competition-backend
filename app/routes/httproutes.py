@@ -29,7 +29,8 @@ async def home(request: Request):
     request.session["csrf"] = generate_csrf()
     return templates.TemplateResponse("home.html", {
         "request": request,
-        "rooms": [request.app.state.rMgr.rooms[i] for i in request.app.state.rMgr.allRooms]
+        "rooms": [request.app.state.rMgr.rooms[i] for i in request.app.state.rMgr.allRooms],
+        "csrf": request.session["csrf"]
     })
     # return "Raaaah"
 
@@ -77,8 +78,10 @@ async def loginForm(request: Request, data: Annotated[LoginForm, Form()]):
 def logout(request: Request, csrf: Annotated[str, Form()]):
     # if the CSRF token is incorrect -> untrusted request
     if not validate_csrf(request, csrf):
+        print("here")
         return RedirectResponse(url=request.url_for("home"), status_code=303)
     # if it is correct -> we clear everything
+    print("here")
     request.session.clear()
     return RedirectResponse(url=request.url_for("login"), status_code=303)
 

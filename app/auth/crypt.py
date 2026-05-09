@@ -5,13 +5,18 @@ import secrets
 from fastapi.requests import Request
 import csv
 
+from fastapi import Request, WebSocket
+from typing import Union
+
+_Connection = Union[Request, WebSocket]
+
 
 def generate_csrf():
     return secrets.token_urlsafe(32)
 
 
-def validate_csrf(request: Request, csrf_token: str) -> bool:
-    csrf = request.session.get("csrf")
+def validate_csrf(connection: _Connection, csrf_token: str) -> bool:
+    csrf = connection.session.get("csrf")
     if not csrf or csrf != csrf_token:
         return False
     return True

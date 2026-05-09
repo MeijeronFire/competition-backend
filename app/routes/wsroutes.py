@@ -5,23 +5,64 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.core.connections import initClient, delClient
 from game.gameActor import GameActor
-from app.models.verify import RegisterPacket
+from app.models.verify import RegisterPacket, DashRegMsg
 from app.auth.session import is_authenticated
-from pydantic import ValidationError
+from app.auth.crypt import validate_csrf
+from pydantic import ValidationError, model_validator
 
 router = APIRouter()
 
 # iws = interface websocket
 
 
-@router.get("/ws/interface")
-async def control_websocket(iws: WebSocket):
-    pass
-    # TRANSPORT LAYER
+@router.websocket("/ws/dashboard")
+async def dashboard(ws: WebSocket):
+    # step 0: accept connection
+    await ws.accept()
+
+   # step 1: see if user is even allowed
+    if not is_authenticated(ws):
+        await ws.close(code=1008)  # policy violation, auth failure
+        return
+
+    # step 2: we see if there is csrf included in initial packet
+    msg = await ws.receive_json()
+    try:
+        authMsg = DashRegMsg.model_validate(msg)
+    except ValidationError:
+        await ws.send_json({
+            "type": "error",
+            "errorType": "Sent malformed authentication packet. "
+            'Expected {"csrf": [base64 token]} token, '
+            f"got {msg}"
+        })
+        await ws.close()
+        return
+
+    # step 3: actually validate the csrf
+    if not validate_csrf(ws, authMsg.csrf):
+        await ws.send_json({
+            "type": "error",
+            "errorType": f"Invalid session. Retry after reloading the page."
+        })
+        await ws.close(code=1008)  # policy violation, auth failure
+        return
+
+    # Now we are in the clear and we can start parsing messages.
+    # do this until the websocket disconnects unexpectedly
+    try:
+        while True:
+            msg = await ws.receive_json()
+            if msg.get("action") is None or msg.get("data") is None:
+                continue
+            await ws.app.state.supervisorQueue.put((msg["action"], msg["data"]))
+    except WebSocketDisconnect:
+        # on disconnect run this hook
+        return
 
 
 @router.websocket("/ws/{room_id}")
-async def websocket_endpoint(ws: WebSocket, room_id: str):
+async def websocket_endpoint(ws: WebSocket, room_id: int):
     # after this point, never access the websocket object directly
     connectedUser = await initClient(ws)
     ws.app.state.cMgr.connect(connectedUser)
@@ -34,7 +75,7 @@ async def websocket_endpoint(ws: WebSocket, room_id: str):
     except ValidationError:
         # TODO: name is incorrect. Instantly find name of client when registering
         print(
-            f"client {connectedUser} set an incorrect JSON registration packet.")
+            f"client {connectedUser} sent an incorrect JSON registration packet.")
         # TODO: make this more verbose to explain which packet would be expected
         print(f"sending error to {ws.client}")
         await ws.send_json({
@@ -46,10 +87,10 @@ async def websocket_endpoint(ws: WebSocket, room_id: str):
 
     # now we see if the specified room indeed exists
     try:
-        room: GameActor = ws.app.state.rMgr.rooms[int(room_id)]
+        room: GameActor = ws.app.state.rMgr.rooms[room_id]
     except (KeyError, ValueError):
         print(
-            f"client {connectedUser} set an incorrect JSON registration packet.")
+            f"client {connectedUser} sent an incorrect JSON registration packet.")
         # TODO: make this more verbose to explain the room is incorrect
         await ws.send_json({
             "type": "error",

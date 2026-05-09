@@ -34,10 +34,15 @@ class RoomManager():
             "example": Example
         }
 
-    def create(self, game: str) -> int:
+    def create(self, game: str) -> int | None:
         # room_id = randint(10000, 99999)
+        if game not in self.games.keys():
+            # maybe should be raise ?
+            print(
+                f"\033[1;33mWARNING: \033[0m Provided game `{game}' does not exist!")
+            return
         room_id = 10851
-        print(f"instantiated {game} at {room_id}")
+        print(f"\033[1;32mINFO:\t\033[0m  instantiated {game} at {room_id}")
         inbox: asyncio.Queue[tuple[UUID, dict]] = asyncio.Queue()
         actor = GameActor(self.games[game](), inbox, self.outbox)
         self.rooms[room_id] = actor

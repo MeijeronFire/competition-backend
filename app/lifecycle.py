@@ -14,6 +14,7 @@ from app.core import Client
 from app.core import ConnectionMgr
 from app.core import RoomManager
 from app.core import Sender
+from app.core import GameSupervisor
 
 
 def log_async_error(task: asyncio.Task):
@@ -23,26 +24,27 @@ def log_async_error(task: asyncio.Task):
         traceback.print_exc()
 
 
-async def gameSupervisor(app, rMgr: RoomManager):
-    while True:
-        await asyncio.sleep(10)
-        # print("slept for 10 seconds :)")
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # set the maxsize to 100, s.t. if the handling is less than traffic,
     # we block allowing new msgs
     # inbox: asyncio.Queue[Tuple[Client, Dict]] = asyncio.Queue(maxsize = 100)
-    outbox: asyncio.Queue[Tuple[UUID, Dict]] = asyncio.Queue(maxsize=100)
+    outbox: asyncio.Queue[tuple[UUID, dict]] = asyncio.Queue(maxsize=100)
     app.state.outbox = outbox
+
     rMgr = RoomManager(outbox)
-    cMgr = ConnectionMgr()
     app.state.rMgr = rMgr
+
+    cMgr = ConnectionMgr()
     app.state.cMgr = cMgr
 
-    gameSupervisorTask = asyncio.create_task(gameSupervisor(app, rMgr))
-    gameSupervisorTask.add_done_callback(log_async_error)
+    # gameSupervisorTask = asyncio.create_task(GameSupervisor(app, rMgr))
+    # gameSupervisorTask.add_done_callback(log_async_error)
+    supervisorQueue: asyncio.Queue[tuple[str,
+                                         dict]] = asyncio.Queue(maxsize=100)
+    app.state.supervisorQueue = supervisorQueue
+    supervisor = GameSupervisor(supervisorQueue, rMgr)
+    await supervisor.start()
 
     # now we instantiate the sender postoffice!
     sender = Sender(outbox, cMgr)
@@ -52,5 +54,5 @@ async def lifespan(app: FastAPI):
 
     await sender.stop()
 
-    if gameSupervisorTask:
-        gameSupervisorTask.cancel()
+    # if gameSupervisorTask:
+    # gameSupervisorTask.cancel()
