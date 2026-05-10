@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
 
+import threading
+import code
 import sys
 import os
 from fastapi import FastAPI
@@ -29,6 +31,15 @@ app.include_router(httproutes.router)
 if "--reload" in sys.argv or os.environ.get("RUN_MAIN") == "true":
     print("\033[1;33mWARNING: \033[0m Running in reload mode! Turn off in prod!")
 
+
+def start_shell():
+    vars = globals().copy()
+    vars.update(locals())
+    shell = code.InteractiveConsole(vars)
+    shell.interact("FastAPI shell")
+
+
+threading.Thread(target=start_shell, daemon=True).start()
 
 if __name__ == "__main__":
     uvicorn.run(

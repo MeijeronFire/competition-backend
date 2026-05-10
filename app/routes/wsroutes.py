@@ -64,7 +64,9 @@ async def dashboard(ws: WebSocket):
             await ws.app.state.supervisor.parse(msg["action"], msg["data"])
     except WebSocketDisconnect:
         # on disconnect run this hook
-        return
+        await delClient(connectedUser)
+        # delete it from known connections
+        ws.app.state.cMgr.disconnect(ws)
 
 
 @router.websocket("/ws/{room_id}")

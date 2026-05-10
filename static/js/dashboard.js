@@ -4,11 +4,21 @@ const ws = new WebSocket(`wss://${window.location.host}/ws/dashboard`)
 // bind an onmessage
 ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
-
+    console.log(e.data)
     switch (msg.type) {
         case "create":
-            console.log("created");
             createCard(msg.data)
+            break;
+        case "fullState":
+            // first clear all cards
+            clearCards();
+
+            // then create all new ones
+            for (const [key, value] of Object.entries(msg.data)) {
+                createCard(value);
+            }
+            break;
+        case "delete":
             break;
         default:
             console.log("warning: incomming ws message cannot be parsed")
@@ -20,6 +30,14 @@ async function register() {
     await sleep(250);
     await ws.send(JSON.stringify({
         csrf: window.CSRF_TOKEN
+    }));
+    await getTotalState();
+}
+
+async function getTotalState() {
+    await ws.send(JSON.stringify({
+        action: "getState",
+        data: {}
     }));
 }
 
@@ -58,6 +76,11 @@ function createCard(data) {
     `;
 
     document.getElementById("card-container").appendChild(card);
+}
+
+// clear all cards
+function clearCards(data) {
+    document.getElementById("card-container").innerHTML = "";
 }
 
 // get rid of a card

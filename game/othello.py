@@ -15,7 +15,7 @@ class moveMsg(BaseModel):
 
 class Othello():
     def __init__(self):
-        self.name = "Example"
+        self.name = "Anker"
         self.UUIDs: list[UUID] = []
         self.genericState: list = [
             0, 0, 0, 0, 0, 0, 0, 0,
@@ -31,6 +31,9 @@ class Othello():
         self.points: dict[UUID, int] = {}
         self.turnNr = 2
         self.minPlayers = 2
+
+    def getState(self):
+        return {}
 
     async def start(self) -> None:
         pass

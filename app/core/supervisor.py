@@ -37,7 +37,7 @@ class GameSupervisor():
             "data": {
                 "playerNr": 0,
                 "minPlayers": 2,
-                "title": self.rMgr.rooms[roomID].name,
+                "title": self.rMgr.rooms[roomID].game.name,
                 "id": roomID
             }}))
 
@@ -63,6 +63,12 @@ class GameSupervisor():
         roomID = msg.roomID
         await self.rMgr.delete(roomID)
 
+    async def _getState(self, msg: dict) -> None:
+        print(self.rMgr.buildState())
+        await self.queue.put(("admin", {
+            "type": "fullState",
+            "data": self.rMgr.buildState()}))
+
     async def parse(self, action: str, msg: dict):
         # implementation of our simple CRUD interface
         match action:
@@ -72,5 +78,7 @@ class GameSupervisor():
                 self._update(msg)
             case "delete":
                 await self._delete(msg)
+            case "getState":
+                await self._getState(msg)
             case _:
                 raise Exception("Improper command provided to supervisor")
