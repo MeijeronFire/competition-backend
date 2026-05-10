@@ -1,14 +1,32 @@
 {% extends "base.html" %}
 {% block title %}Home{% endblock %}
 {% block content%}
-<!-- What to render for every room -->
-{% for i in rooms %}
-<div class="card border-primary mb-3" style="max-width: 20rem;">
-    <div class="card-header">{{ i.game.UUIDs|length }}/{{ i.game.minPlayers }}</div>
-    <div class="card-body">
-        <h4 class="card-title">{{ i.name }}</h4>
-        <p class="card-text">Not quite sure what to put here just yet</p>
+
+<div class="dropdown">
+    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        Create game</button>
+    <ul class="dropdown-menu">
+        {% for name in gameNames %}
+        <li>
+            <a class="dropdown-item ws-option" href="#" data-name="{{ name }}">
+                {{ name}}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="container">
+    <div class="row" id="card-container">
+        <!-- in here, the JS places cards -->
     </div>
 </div>
-{% endfor %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.CSRF_TOKEN = "{{ csrf }}";
+</script>
+<script src="{{ url_for('static', path='/js/dashboard.js') }}"></script>
 {% endblock %}

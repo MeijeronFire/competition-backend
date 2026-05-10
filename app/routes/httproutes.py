@@ -30,7 +30,8 @@ async def home(request: Request):
     return templates.TemplateResponse("home.html", {
         "request": request,
         "rooms": [request.app.state.rMgr.rooms[i] for i in request.app.state.rMgr.allRooms],
-        "csrf": request.session["csrf"]
+        "csrf": request.session["csrf"],
+        "gameNames": request.app.state.rMgr.games.keys()
     })
     # return "Raaaah"
 

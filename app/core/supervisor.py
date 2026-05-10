@@ -50,9 +50,9 @@ class GameSupervisor(Actor):
         room_id = msg["room_id"]
         self.rMgr.delete(room_id)
 
-    async def _loop(self):
+    async def _read(self):
         while True:
-            # wait for something to send
+            # wait for something to receive
             action, msg = await self.queue.get()
             # implementation of our simple CRUD interface
             match action:
