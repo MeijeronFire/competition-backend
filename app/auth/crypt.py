@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
 
+import hashlib
+import json
 import secrets
 from fastapi.requests import Request
 import csv
@@ -40,3 +42,14 @@ def validate_password(username: str, password: str) -> bool:
             if row["username"] == username:
                 return row["password"] == password
     raise Exception("Provided user does not exist!")
+
+
+# a way to calculate the hash in a consistent way
+def computeHash(obj):
+    jsonString = json.dumps(
+        obj,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+    return hashlib.sha256(jsonString.encode()).hexdigest()

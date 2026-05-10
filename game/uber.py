@@ -40,6 +40,9 @@ class Uber():
         self._sendQueue: asyncio.Queue[dict | None] = asyncio.Queue()
         self._recvQueue: asyncio.Queue[dict] = asyncio.Queue()
 
+    def getState(self):
+        return {}
+
     def addPlayer(self, uuid: UUID, username: str):
         self.UUIDs.append(uuid)
         self.playerNames[uuid] = username

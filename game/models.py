@@ -14,6 +14,9 @@ class Game(Protocol):
     points: dict[UUID, int]
     name: str
 
+    def getState(self) -> dict:
+        ...
+
     async def start(self) -> None:
         ...
 

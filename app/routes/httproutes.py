@@ -29,7 +29,7 @@ async def home(request: Request):
     request.session["csrf"] = generate_csrf()
     return templates.TemplateResponse("home.html", {
         "request": request,
-        "rooms": [request.app.state.rMgr.rooms[i] for i in request.app.state.rMgr.allRooms],
+        "rooms": [request.app.state.rMgr.rooms[i] for i in request.app.state.rMgr.rooms.keys()],
         "csrf": request.session["csrf"],
         "gameNames": request.app.state.rMgr.games.keys()
     })

@@ -11,13 +11,23 @@ class GameActor():
     def __init__(
         self,
         game: Game,
+        id: int,
         inbox: asyncio.Queue[tuple[UUID, dict]],
         outbox: asyncio.Queue[tuple[UUID | str, dict]]
     ):
         self.game = game
         self.inbox = inbox
         self.outbox = outbox
-        self.name = game.name
+        self.id = id
+
+    def toState(self):
+        return {
+            "playerNr": len(self.game.UUIDs),
+            "minPlayers": self.game.minPlayers,
+            "title": self.game.name,
+            "id": self.id,
+            "state": self.game.getState()
+        }
 
     async def run(self):
         await self.game.start()
