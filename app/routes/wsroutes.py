@@ -18,11 +18,11 @@ router = APIRouter()
 @router.websocket("/ws/dashboard")
 async def dashboard(ws: WebSocket):
     # step 0: accept connection
-    await ws.accept()
+    connectedUser = await initClient(ws)
 
    # step 1: see if user is even allowed
     if not is_authenticated(ws):
-        await ws.close(code=1008)  # policy violation, auth failure
+        await delClient(connectedUser, code=1008)
         return
 
     # step 2: we see if there is csrf included in initial packet
@@ -36,7 +36,7 @@ async def dashboard(ws: WebSocket):
             'Expected {"csrf": [base64 token]} token, '
             f"got {msg}"
         })
-        await ws.close()
+        await delClient(connectedUser)
         return
 
     # step 3: actually validate the csrf
@@ -45,8 +45,13 @@ async def dashboard(ws: WebSocket):
             "type": "error",
             "errorType": f"Invalid session. Retry after reloading the page."
         })
-        await ws.close(code=1008)  # policy violation, auth failure
+        # policy violation, auth failure
+        await delClient(connectedUser, code=1008)
         return
+
+    # we can add the user to the list of players we know
+    ws.app.state.cMgr.connect(connectedUser)
+    ws.app.state.adminUUID = connectedUser.uuid
 
     # Now we are in the clear and we can start parsing messages.
     # do this until the websocket disconnects unexpectedly
@@ -56,6 +61,21 @@ async def dashboard(ws: WebSocket):
             if msg.get("action") is None or msg.get("data") is None:
                 continue
             await ws.app.state.supervisorQueue.put((msg["action"], msg["data"]))
+            # TODO: actually properly implement this terrible, awful hack here
+            # TODO: also standardize this schema!!!!
+            # bad
+            # bad
+            # bad
+            # bad
+            if msg.get("action") == "create":
+                await ws.app.state.outbox.put((ws.app.state.adminUUID, {
+                    "type": "create",
+                    "data": {
+                        "playerNr": 0,
+                        "minPlayers": 2,
+                        "title": "Example"
+                    }
+                }))
     except WebSocketDisconnect:
         # on disconnect run this hook
         return

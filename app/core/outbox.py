@@ -13,7 +13,7 @@ class Sender(Actor):
         self.queue = queue
         self.cMgr = cMgr
 
-    async def _loop(self):
+    async def _read(self):
         while True:
             # wait for something to send
             target_id, msg = await self.queue.get()

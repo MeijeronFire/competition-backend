@@ -19,7 +19,7 @@ class Actor(ABC):
         self._task: asyncio.Task[dict | None] | None = None
 
     async def start(self) -> None:
-        self._task = asyncio.create_task(self._loop())
+        self._task = asyncio.create_task(self._read())
         self._task.add_done_callback(log_async_error)
 
     async def stop(self) -> None:
@@ -28,7 +28,7 @@ class Actor(ABC):
             await self._task
 
     @abstractmethod
-    async def _loop(self) -> None:
+    async def _read(self) -> None:
         while True:
             input = await self.queue.get()
             ...  # some handling function

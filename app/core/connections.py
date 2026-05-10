@@ -20,10 +20,10 @@ async def initClient(ws: WebSocket) -> Client:
 # remove client
 
 
-async def delClient(client: Client):
+async def delClient(client: Client, code=1000):
     # close the connection
     ws = client.ws
-    await ws.close()
+    await ws.close(code=code)
 
     return
 
