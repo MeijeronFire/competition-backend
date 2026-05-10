@@ -12,7 +12,7 @@ class GameActor():
         self,
         game: Game,
         inbox: asyncio.Queue[tuple[UUID, dict]],
-        outbox: asyncio.Queue[tuple[UUID, dict]]
+        outbox: asyncio.Queue[tuple[UUID | str, dict]]
     ):
         self.game = game
         self.inbox = inbox

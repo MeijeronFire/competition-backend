@@ -42,14 +42,14 @@ function warn(msg, title = "Error") {
 }
 
 // create a card
-// TODO: make these cancelable
 function createCard(data) {
     const card = document.createElement("div");
     card.className = "col-3";
-    // warning.role = "alert";
+    card.id = `card-${data.id}`;
     card.innerHTML = `
     <div class="card border-primary mb-3">
         <div class="card-header">${data.playerNr}/${data.minPlayers}</div>
+        <button class="btn-close position-absolute top-0 end-0 card-close" id="btn-${data.id}"></button>
         <div class="card-body">
             <h4 class="card-title">${data.title}</h4>
             <p class="card-text">Not quite sure what to put here just yet</p>
@@ -60,13 +60,29 @@ function createCard(data) {
     document.getElementById("card-container").appendChild(card);
 }
 
-// <div class="card border-primary mb-3" style="max-width: 20rem;">
-//    <div class="card-header">{{ i.game.UUIDs | length }}/{{ i.game.minPlayers }}</div>
-//    <div class="card-body">
-//        <h4 class="card-title">{{ i.name }}</h4>
-//        <p class="card-text">Not quite sure what to put here just yet</p>
-//    </div>
-// </div>
+// get rid of a card
+document.addEventListener("click", (e) => {
+    // button = card-close closest to event `e'
+    const button = e.target.closest(".card-close");
+    if (!button) return;
+
+    if (ws.readyState !== 1) {
+        warn("Session invalid. Reload webpage.");
+        return;
+    }
+
+    const id = button.id.replace("btn-", "");
+    document.getElementById(`card-${id}`)?.remove();
+
+    const msg = JSON.stringify({
+        action: "delete",
+        data: {
+            roomID: id
+        }
+    });
+    console.log(msg);
+    ws.send(msg);
+});
 
 // dealing with creating new game!
 document.addEventListener("click", (e) => {
@@ -76,8 +92,10 @@ document.addEventListener("click", (e) => {
 
     e.preventDefault();
 
-    if (ws.readyState !== 1)
+    if (ws.readyState !== 1) {
         warn("Session invalid. Reload webpage.");
+        return;
+    }
 
     const msg = JSON.stringify({
         action: "create",

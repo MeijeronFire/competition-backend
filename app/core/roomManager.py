@@ -15,12 +15,14 @@ import traceback
 def log_async_error(task: asyncio.Task):
     try:
         task.result()
-    except:
+    except asyncio.CancelledError:
+        pass
+    except Exception as e:
         traceback.print_exc()
 
 
 class RoomManager():
-    def __init__(self, outbox: asyncio.Queue[tuple[UUID, dict]]):
+    def __init__(self, outbox: asyncio.Queue[tuple[UUID | str, dict]]):
         self.rooms: dict[int, GameActor] = {}
         self.tasks: dict[int, asyncio.Task] = {}
         self.allRooms: list[int] = []
@@ -41,8 +43,12 @@ class RoomManager():
             print(
                 f"\033[1;33mWARNING: \033[0m Provided game `{game}' does not exist!")
             return
-        room_id = 10851
-        print(f"\033[1;32mINFO:\t\033[0m  instantiated {game} at {room_id}")
+
+        # so run until there is a proper random number
+        while (room_id := randint(10000, 99999)) in self.allRooms:
+            pass
+
+        print(f"\033[1;32mINFO:\t\033[0m  Instantiated {game} at {room_id}")
         inbox: asyncio.Queue[tuple[UUID, dict]] = asyncio.Queue()
         actor = GameActor(self.games[game](), inbox, self.outbox)
         self.rooms[room_id] = actor
@@ -51,7 +57,18 @@ class RoomManager():
         self.tasks[room_id].add_done_callback(log_async_error)
         return room_id
 
-    def delete(self, room_id: int) -> None:
-        self.tasks[room_id].cancel()
-        self.tasks.pop(room_id)
+    async def delete(self, roomID: int) -> None:
+        if roomID not in self.rooms.keys():
+            print("useless ID provided.")
+            return
+        gameName = self.rooms[roomID].game.name
+        self.tasks[roomID].cancel()
+        try:
+            await self.tasks[roomID]
+        except asyncio.CancelledError:
+            pass
+        self.tasks.pop(roomID)
+        self.rooms.pop(roomID)
+        self.allRooms.remove(roomID)
+        print(f"\033[1;32mINFO:\t\033[0m  Killed {gameName} at {roomID}")
         # maybe call some sort of destructor on the object itself?

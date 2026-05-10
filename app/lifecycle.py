@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
     # set the maxsize to 100, s.t. if the handling is less than traffic,
     # we block allowing new msgs
     # inbox: asyncio.Queue[Tuple[Client, Dict]] = asyncio.Queue(maxsize = 100)
-    outbox: asyncio.Queue[tuple[UUID, dict]] = asyncio.Queue(maxsize=100)
+    outbox: asyncio.Queue[tuple[UUID | str, dict]] = asyncio.Queue(maxsize=100)
     app.state.outbox = outbox
 
     rMgr = RoomManager(outbox)
@@ -40,14 +40,15 @@ async def lifespan(app: FastAPI):
 
     # gameSupervisorTask = asyncio.create_task(GameSupervisor(app, rMgr))
     # gameSupervisorTask.add_done_callback(log_async_error)
-    supervisorQueue: asyncio.Queue[tuple[str,
-                                         dict]] = asyncio.Queue(maxsize=100)
-    app.state.supervisorQueue = supervisorQueue
-    supervisor = GameSupervisor(supervisorQueue, rMgr)
-    await supervisor.start()
+    # supervisorQueue: asyncio.Queue[tuple[str,
+    #  dict]] = asyncio.Queue(maxsize=100)
+    # app.state.supervisorQueue = supervisorQueue
+    supervisor = GameSupervisor(outbox, rMgr)
+    app.state.supervisor = supervisor
 
     # now we instantiate the sender postoffice!
     sender = Sender(outbox, cMgr)
+    app.state.sender = sender
     await sender.start()
 
     yield
