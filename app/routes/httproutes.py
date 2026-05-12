@@ -11,8 +11,9 @@ from app.auth.crypt import generate_csrf, validate_csrf, is_user, validate_passw
 
 # for the form models
 from app.models.verify import LoginForm
+from app.models.primitives import StateModel
 
-from typing import Annotated
+from typing import Annotated, cast
 
 router = APIRouter()
 
@@ -22,6 +23,7 @@ templates = Jinja2Templates(directory="templates")
 # HTML endpoint
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request):
+    state = cast(StateModel, request.app.state)
     if not is_authenticated(request):
         return RedirectResponse(url=request.url_for("login"), status_code=303)
 
@@ -29,9 +31,9 @@ async def home(request: Request):
     request.session["csrf"] = generate_csrf()
     return templates.TemplateResponse("home.html", {
         "request": request,
-        "rooms": [request.app.state.rMgr.rooms[i] for i in request.app.state.rMgr.rooms.keys()],
+        "rooms": [state.rMgr.rooms[i] for i in state.rMgr.rooms.keys()],
         "csrf": request.session["csrf"],
-        "gameNames": request.app.state.rMgr.games.keys()
+        "gameNames": state.rMgr.games.keys()
     })
     # return "Raaaah"
 

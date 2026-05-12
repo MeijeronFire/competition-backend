@@ -13,7 +13,11 @@ from uuid import UUID
 
 
 class GameSupervisor():
-    def __init__(self, queue: asyncio.Queue[tuple[UUID | str, dict]], rMgr: RoomManager):
+    def __init__(
+        self,
+        queue: asyncio.Queue[tuple[UUID | str, dict]],
+        rMgr: RoomManager
+    ):
         self.queue = queue
         self.rMgr = rMgr
         self._task: asyncio.Task[dict | None] | None = None

@@ -6,9 +6,11 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.core.connections import initClient, delClient
 from game.gameActor import GameActor
 from app.models.verify import RegisterPacket, DashRegMsg
+from app.models.primitives import StateModel
 from app.auth.session import is_authenticated
 from app.auth.crypt import validate_csrf
 from pydantic import ValidationError, model_validator
+from typing import cast
 
 router = APIRouter()
 
@@ -17,6 +19,7 @@ router = APIRouter()
 
 @router.websocket("/ws/dashboard")
 async def dashboard(ws: WebSocket):
+    state = cast(StateModel, ws.app.state)
     # step 0: accept connection
     connectedUser = await initClient(ws)
 
@@ -25,7 +28,7 @@ async def dashboard(ws: WebSocket):
         await delClient(connectedUser, code=1008)
         return
 
-    # step 2: we see if there is csrf included in initial packet
+    # step 2: we see if there is csrf included in initial msg
     msg = await ws.receive_json()
     try:
         authMsg = DashRegMsg.model_validate(msg)
@@ -50,8 +53,8 @@ async def dashboard(ws: WebSocket):
         return
 
     # we can add the user to the list of players we know
-    ws.app.state.cMgr.connect(connectedUser)
-    ws.app.state.sender.admin = connectedUser.uuid
+    state.cMgr.connect(connectedUser)
+    state.sender.admin = connectedUser.uuid
 
     # Now we are in the clear and we can start parsing messages.
     # do this until the websocket disconnects unexpectedly
@@ -60,20 +63,21 @@ async def dashboard(ws: WebSocket):
             msg = await ws.receive_json()
             if msg.get("action") is None or msg.get("data") is None:
                 continue
-            # await ws.app.state.supervisorQueue.put((msg["action"], msg["data"]))
-            await ws.app.state.supervisor.parse(msg["action"], msg["data"])
+            # await state.supervisorQueue.put((msg["action"], msg["data"]))
+            await state.supervisor.parse(msg["action"], msg["data"])
     except WebSocketDisconnect:
         # on disconnect run this hook
         await delClient(connectedUser)
         # delete it from known connections
-        ws.app.state.cMgr.disconnect(ws)
+        state.cMgr.disconnect(ws)
 
 
 @router.websocket("/ws/{room_id}")
 async def websocket_endpoint(ws: WebSocket, room_id: int):
+    state = cast(StateModel, ws.app.state)
     # after this point, never access the websocket object directly
     connectedUser = await initClient(ws)
-    ws.app.state.cMgr.connect(connectedUser)
+    state.cMgr.connect(connectedUser)
     # interpret the first packet, which contains
     # client-defined information
     msg = await connectedUser.ws.receive_json()
@@ -95,7 +99,7 @@ async def websocket_endpoint(ws: WebSocket, room_id: int):
 
     # now we see if the specified room indeed exists
     try:
-        room: GameActor = ws.app.state.rMgr.rooms[room_id]
+        room = state.rMgr.rooms[room_id]
     except (KeyError, ValueError):
         print(
             f"client {connectedUser} sent an incorrect JSON registration packet.")
@@ -130,5 +134,5 @@ async def websocket_endpoint(ws: WebSocket, room_id: int):
         # on disconnect run the manager disconnect hook
         await delClient(connectedUser)
         # delete it from known connections
-        ws.app.state.cMgr.disconnect(ws)
+        state.cMgr.disconnect(ws)
         return

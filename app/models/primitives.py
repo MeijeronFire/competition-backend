@@ -4,6 +4,19 @@
 import asyncio
 import traceback
 from abc import ABC, abstractmethod
+from app.core import (
+    RoomManager,
+    ConnectionMgr,
+    GameSupervisor,
+    Sender
+)
+
+
+class StateModel:
+    rMgr: RoomManager
+    cMgr: ConnectionMgr
+    supervisor: GameSupervisor
+    sender: Sender
 
 
 def log_async_error(task: asyncio.Task):

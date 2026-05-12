@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 import asyncio
 import traceback
 from fastapi import FastAPI
-from typing import Tuple, Dict
+from typing import Tuple, Dict, cast
 from uuid import UUID
 
 from game import Uber
@@ -15,6 +15,7 @@ from app.core import ConnectionMgr
 from app.core import RoomManager
 from app.core import Sender
 from app.core import GameSupervisor
+from app.models.primitives import StateModel
 
 
 def log_async_error(task: asyncio.Task):
@@ -26,6 +27,7 @@ def log_async_error(task: asyncio.Task):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    state = cast(StateModel, app.state)
     # set the maxsize to 100, s.t. if the handling is less than traffic,
     # we block allowing new msgs
     # inbox: asyncio.Queue[Tuple[Client, Dict]] = asyncio.Queue(maxsize = 100)
@@ -38,11 +40,6 @@ async def lifespan(app: FastAPI):
     cMgr = ConnectionMgr()
     app.state.cMgr = cMgr
 
-    # gameSupervisorTask = asyncio.create_task(GameSupervisor(app, rMgr))
-    # gameSupervisorTask.add_done_callback(log_async_error)
-    # supervisorQueue: asyncio.Queue[tuple[str,
-    #  dict]] = asyncio.Queue(maxsize=100)
-    # app.state.supervisorQueue = supervisorQueue
     supervisor = GameSupervisor(outbox, rMgr)
     app.state.supervisor = supervisor
 
