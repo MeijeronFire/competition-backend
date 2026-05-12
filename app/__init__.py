@@ -8,6 +8,7 @@ import os
 from fastapi import FastAPI
 from app.routes import wsroutes, httproutes
 from fastapi.staticfiles import StaticFiles
+from typing import cast
 
 # actual server
 import uvicorn
@@ -31,15 +32,6 @@ app.include_router(httproutes.router)
 if "--reload" in sys.argv or os.environ.get("RUN_MAIN") == "true":
     print("\033[1;33mWARNING: \033[0m Running in reload mode! Turn off in prod!")
 
-
-def start_shell():
-    vars = globals().copy()
-    vars.update(locals())
-    shell = code.InteractiveConsole(vars)
-    shell.interact("FastAPI shell")
-
-
-threading.Thread(target=start_shell, daemon=True).start()
 
 if __name__ == "__main__":
     uvicorn.run(

@@ -13,6 +13,7 @@ class Sender(Actor):
     def __init__(self, queue: asyncio.Queue[tuple[UUID | str, dict]], cMgr: ConnectionMgr):
         self.queue = queue
         self.cMgr = cMgr
+        # TODO: make list, so multiple admins can be connected at the same time
         self.admin: UUID | None = None
 
     async def _read(self):
