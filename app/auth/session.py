@@ -7,12 +7,12 @@ from typing import Union
 _Connection = Union[Request, WebSocket]
 
 
-def get_current_user(request: Request):
+def getCurrentUser(request: Request):
     """
     If user is not logged in, return None
     """
     return request.user.get("user")
 
 
-def is_authenticated(connection: _Connection):
+def isAuthenticated(connection: _Connection):
     return "user" in connection.session

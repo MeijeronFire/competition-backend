@@ -6,7 +6,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 
 # for our HTTP routing
-from app.auth.session import is_authenticated
+from app.auth.session import isAuthenticated
 from app.auth.crypt import generate_csrf, validate_csrf, is_user, validate_password
 
 # for the form models
@@ -24,7 +24,7 @@ templates = Jinja2Templates(directory="templates")
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     state = cast(StateModel, request.app.state)
-    if not is_authenticated(request):
+    if not isAuthenticated(request):
         return RedirectResponse(url=request.url_for("login"), status_code=303)
 
     # logic if logged in
@@ -41,7 +41,7 @@ async def home(request: Request):
 @router.get("/login", response_class=HTMLResponse)
 async def login(request: Request):
     # if already logged in
-    if is_authenticated(request):
+    if isAuthenticated(request):
         return RedirectResponse(url=request.url_for("home"))
     # now we have to find a way to actually log in
     # first we store the csrf token
@@ -91,7 +91,7 @@ def logout(request: Request, csrf: Annotated[str, Form()]):
 
 @router.get("/dashboard")
 async def dashboard(request: Request):
-    if not is_authenticated(request):
+    if not isAuthenticated(request):
         return RedirectResponse(url=request.url_for("login"), status_code=303)
     return {"user": request.session["user"]}
 
