@@ -24,7 +24,7 @@ def log_async_error(task: asyncio.Task):
 
 
 class RoomManager():
-    def __init__(self, outbox: asyncio.Queue[tuple[UUID | str, dict]]):
+    def __init__(self, outbox: asyncio.Queue[tuple[UUID, dict]]):
         self.rooms: dict[int, GameActor] = {}
         self.tasks: dict[int, asyncio.Task] = {}
         self.outbox = outbox

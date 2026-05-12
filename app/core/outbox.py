@@ -10,25 +10,14 @@ from uuid import UUID
 
 
 class Sender(Actor):
-    def __init__(self, queue: asyncio.Queue[tuple[UUID | str, dict]], cMgr: ConnectionMgr):
+    def __init__(self, queue: asyncio.Queue[tuple[UUID, dict]], cMgr: ConnectionMgr):
         self.queue = queue
         self.cMgr = cMgr
-        # TODO: make list, so multiple admins can be connected at the same time
-        self.admin: UUID | None = None
 
     async def _read(self):
         while True:
             # wait for something to send
             targetID, msg = await self.queue.get()
-            if isinstance(targetID, str):
-                if self.admin is None:
-                    print("Message to be sent to admin, who does not exist")
-                    continue
-                elif targetID != "admin":
-                    print("Illegal target provided")
-                    continue
-                else:
-                    targetID = self.admin
             # find the connection of the target to send it to
             target = self.cMgr.clients[targetID]
             # send it
