@@ -10,6 +10,9 @@ from app.routes import wsroutes, httproutes
 from fastapi.staticfiles import StaticFiles
 from typing import cast
 
+# setup loggin
+import app.utils
+
 # actual server
 import uvicorn
 from starlette.middleware.sessions import SessionMiddleware

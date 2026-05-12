@@ -11,6 +11,10 @@ import asyncio
 from pydantic import ValidationError
 from uuid import UUID
 
+import logging
+# TODO: replace most print statements by LOG statements throughout this code
+logger = logging.getLogger(__name__)
+
 
 class GameSupervisor():
     def __init__(
@@ -78,7 +82,7 @@ class GameSupervisor():
         await self._rMgr.delete(roomID)
 
     async def _getState(self, msg: dict) -> None:
-        print(self._rMgr.buildState())
+        logger.info(self._rMgr.buildState())
         await self.sendToAdmins({
             "type": "fullState",
             "data": self._rMgr.buildState()

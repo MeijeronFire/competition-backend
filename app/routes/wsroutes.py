@@ -7,7 +7,7 @@ from app.core.connections import initClient
 from game.gameActor import GameActor
 from app.models.verify import RegisterPacket, DashRegMsg
 from app.models.datastructs import StateModel
-from app.auth.session import is_authenticated
+from app.auth.session import isAuthenticated
 from app.auth.crypt import validate_csrf
 from pydantic import ValidationError, model_validator
 from typing import cast
@@ -24,7 +24,7 @@ async def dashboard(ws: WebSocket):
     connectedUser = await initClient(ws)
 
    # step 1: see if user is even allowed
-    if not is_authenticated(ws):
+    if not isAuthenticated(ws):
         await ws.close(1008)
         return
 

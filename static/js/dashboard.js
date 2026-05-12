@@ -26,6 +26,10 @@ ws.onmessage = (e) => {
     }
 };
 
+function sleep(time) {
+    return new Promise((resolve) => setTimeout(resolve, time));
+}
+
 async function register() {
     await sleep(250);
     await ws.send(JSON.stringify({
@@ -41,9 +45,20 @@ async function getTotalState() {
     }));
 }
 
-function sleep(time) {
-    return new Promise((resolve) => setTimeout(resolve, time));
+/////////////////////////////////////////////////////////////////////
+// dealing with global state and rendering cards
+// the local state looks like this:
+/*
+{
+    <card-id (int)> : {
+        "playerNr": <int>,
+        "minPlayers": <int>,
+        "title": "str"
+    },
+    <card-id (int)> : ...
 }
+*/
+localState = {}
 
 // flashing a warning if something is wrong
 function warn(msg, title = "Error") {
