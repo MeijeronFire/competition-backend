@@ -3,10 +3,10 @@
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from app.core.connections import initClient, delClient
+from app.core.connections import initClient
 from game.gameActor import GameActor
 from app.models.verify import RegisterPacket, DashRegMsg
-from app.models.primitives import StateModel
+from app.models.datastructs import StateModel
 from app.auth.session import is_authenticated
 from app.auth.crypt import validate_csrf
 from pydantic import ValidationError, model_validator
@@ -25,7 +25,7 @@ async def dashboard(ws: WebSocket):
 
    # step 1: see if user is even allowed
     if not is_authenticated(ws):
-        await delClient(connectedUser, code=1008)
+        await ws.close(1008)
         return
 
     # step 2: we see if there is csrf included in initial msg
@@ -39,7 +39,7 @@ async def dashboard(ws: WebSocket):
             'Expected {"csrf": [base64 token]} token, '
             f"got {msg}"
         })
-        await delClient(connectedUser)
+        await ws.close()
         return
 
     # step 3: actually validate the csrf
@@ -49,15 +49,16 @@ async def dashboard(ws: WebSocket):
             "errorType": f"Invalid session. Retry after reloading the page."
         })
         # policy violation, auth failure
-        await delClient(connectedUser, code=1008)
+        await ws.close(1008)
         return
 
     # we can add the user to the list of players we know
     state.cMgr.connect(connectedUser)
-    state.sender.admin = connectedUser.uuid
+    state.supervisor.admins.append(connectedUser.uuid)
 
     # Now we are in the clear and we can start parsing messages.
     # do this until the websocket disconnects unexpectedly
+    # TODO: enclose the rest of the code in try as well!
     try:
         while True:
             msg = await ws.receive_json()
@@ -67,9 +68,10 @@ async def dashboard(ws: WebSocket):
             await state.supervisor.parse(msg["action"], msg["data"])
     except WebSocketDisconnect:
         # on disconnect run this hook
-        await delClient(connectedUser)
+        print(f"Disconnected {connectedUser.uuid}")
         # delete it from known connections
-        state.cMgr.disconnect(ws)
+        state.cMgr.disconnect(connectedUser.uuid)
+        state.supervisor.admins.remove(connectedUser.uuid)
 
 
 @router.websocket("/ws/{room_id}")
@@ -132,7 +134,8 @@ async def websocket_endpoint(ws: WebSocket, room_id: int):
             await room.inbox.put((connectedUser.uuid, data))
     except WebSocketDisconnect:
         # on disconnect run the manager disconnect hook
-        await delClient(connectedUser)
         # delete it from known connections
-        state.cMgr.disconnect(ws)
+        state.cMgr.disconnect(connectedUser.uuid)
+        # inform room that the user does not exist any longer
+        # room.game.delplayer(UUID) (?)
         return

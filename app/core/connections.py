@@ -17,16 +17,6 @@ async def initClient(ws: WebSocket) -> Client:
 
     return thisUser
 
-# remove client
-
-
-async def delClient(client: Client, code=1000):
-    # close the connection
-    ws = client.ws
-    await ws.close(code=code)
-
-    return
-
 
 class Client():
     def __init__(self, ws: WebSocket):
@@ -62,9 +52,10 @@ class ConnectionMgr:
         self.connections[client.ws] = client
         self.clients[client.uuid] = client
 
-    def disconnect(self, ws):
+    def disconnect(self, uuid: UUID):
         # safe .remove method
-        self.connections.pop(ws)
+        self.connections.pop(self.clients[uuid].ws)
+        self.clients.pop(uuid)
         print("Client disconnected (normal or abnormal)")
         # we still want to get rid of the dead connection,
         # so this is afterwards

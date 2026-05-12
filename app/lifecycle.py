@@ -15,7 +15,7 @@ from app.core import ConnectionMgr
 from app.core import RoomManager
 from app.core import Sender
 from app.core import GameSupervisor
-from app.models.primitives import StateModel
+from app.models.datastructs import StateModel
 
 
 def log_async_error(task: asyncio.Task):
@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
     # set the maxsize to 100, s.t. if the handling is less than traffic,
     # we block allowing new msgs
     # inbox: asyncio.Queue[Tuple[Client, Dict]] = asyncio.Queue(maxsize = 100)
-    outbox: asyncio.Queue[tuple[UUID | str, dict]] = asyncio.Queue(maxsize=100)
+    outbox: asyncio.Queue[tuple[UUID, dict]] = asyncio.Queue(maxsize=100)
     app.state.outbox = outbox
 
     rMgr = RoomManager(outbox)

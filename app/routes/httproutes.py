@@ -11,7 +11,7 @@ from app.auth.crypt import generate_csrf, validate_csrf, is_user, validate_passw
 
 # for the form models
 from app.models.verify import LoginForm
-from app.models.primitives import StateModel
+from app.models.datastructs import StateModel
 
 from typing import Annotated, cast
 

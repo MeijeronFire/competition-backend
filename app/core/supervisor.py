@@ -15,12 +15,21 @@ from uuid import UUID
 class GameSupervisor():
     def __init__(
         self,
-        queue: asyncio.Queue[tuple[UUID | str, dict]],
+        queue: asyncio.Queue[tuple[UUID, dict]],
         rMgr: RoomManager
     ):
-        self.queue = queue
-        self.rMgr = rMgr
+        self._queue = queue
+        self._rMgr = rMgr
+
         self._task: asyncio.Task[dict | None] | None = None
+        self.admins: list[UUID] = []
+
+    async def sendToAdmins(self, msg: dict) -> None:
+        for admin in self.admins:
+            await self._queue.put((
+                admin,
+                msg
+            ))
 
     async def _create(self, data: dict[str, str]) -> None:
         """
@@ -32,18 +41,19 @@ class GameSupervisor():
         except ValidationError:
             return
 
-        roomID = self.rMgr.create(msg.name)
+        roomID = self._rMgr.create(msg.name)
         if roomID is None:
             return  # do some better error handling here
 
-        await self.queue.put(("admin", {
+        await self.sendToAdmins({
             "type": "create",
             "data": {
                 "playerNr": 0,
                 "minPlayers": 2,
-                "title": self.rMgr.rooms[roomID].game.name,
+                "title": self._rMgr.rooms[roomID].game.name,
                 "id": roomID
-            }}))
+            }
+        })
 
     def _update(self, data: dict) -> None:
         """
@@ -65,13 +75,14 @@ class GameSupervisor():
         except ValidationError:
             return
         roomID = msg.roomID
-        await self.rMgr.delete(roomID)
+        await self._rMgr.delete(roomID)
 
     async def _getState(self, msg: dict) -> None:
-        print(self.rMgr.buildState())
-        await self.queue.put(("admin", {
+        print(self._rMgr.buildState())
+        await self.sendToAdmins({
             "type": "fullState",
-            "data": self.rMgr.buildState()}))
+            "data": self._rMgr.buildState()
+        })
 
     async def parse(self, action: str, msg: dict):
         # implementation of our simple CRUD interface
