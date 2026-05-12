@@ -24,6 +24,8 @@ class fillMessage(BaseModel):
 
 class Uber():
     def __init__(self) -> None:
+        self.name = "Uber"
+        self.description = "placeholder"
         self.minPlayers = 2
 
         self.glasses = [0, 0, 0, 0, 0, 0]
@@ -38,6 +40,9 @@ class Uber():
         self._task: asyncio.Task[None] | None = None
         self._sendQueue: asyncio.Queue[dict | None] = asyncio.Queue()
         self._recvQueue: asyncio.Queue[dict] = asyncio.Queue()
+
+    def getState(self):
+        return {}
 
     def addPlayer(self, uuid: UUID, username: str):
         self.UUIDs.append(uuid)

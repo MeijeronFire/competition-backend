@@ -12,6 +12,11 @@ class Game(Protocol):
     genericState: list
     playerNames: dict[UUID, str]
     points: dict[UUID, int]
+    name: str
+    description: str
+
+    def getState(self) -> dict:
+        ...
 
     async def start(self) -> None:
         ...

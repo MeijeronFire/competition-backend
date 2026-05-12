@@ -1,5 +1,39 @@
 {% extends "base.html" %}
 {% block title %}Home{% endblock %}
 {% block content%}
-Test
+
+<div class="d-flex">
+    <div class="me-auto">
+        <h3>Room overview</h3>
+    </div>
+    <div class="dropdown">
+        <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            Create game</button>
+        <ul class="dropdown-menu">
+            {% for name in gameNames %}
+            <li>
+                <a class="dropdown-item ws-option" href="#" data-name="{{ name }}">
+                    {{ name}}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<hr>
+
+<div class="container">
+    <div class="row" id="card-container">
+        <!-- in here, the JS places cards -->
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.CSRF_TOKEN = "{{ csrf }}";
+</script>
+<script src="{{ url_for('static', path='/js/dashboard.js') }}"></script>
 {% endblock %}
