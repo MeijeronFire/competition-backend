@@ -25,6 +25,7 @@ class fillMessage(BaseModel):
 class Uber():
     def __init__(self) -> None:
         self.name = "Uber"
+        self.description = "placeholder"
         self.minPlayers = 2
 
         self.glasses = [0, 0, 0, 0, 0, 0]

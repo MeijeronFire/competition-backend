@@ -13,6 +13,7 @@ class Game(Protocol):
     playerNames: dict[UUID, str]
     points: dict[UUID, int]
     name: str
+    description: str
 
     def getState(self) -> dict:
         ...

@@ -51,12 +51,7 @@ class GameSupervisor():
 
         await self.sendToAdmins({
             "type": "create",
-            "data": {
-                "playerNr": 0,
-                "minPlayers": 2,
-                "title": self._rMgr.rooms[roomID].game.name,
-                "id": roomID
-            }
+            "data": self._rMgr.rooms[roomID].toState(),
         })
 
     def _update(self, data: dict) -> None:
@@ -80,6 +75,13 @@ class GameSupervisor():
             return
         roomID = msg.roomID
         await self._rMgr.delete(roomID)
+        # and inform users of the delete
+        await self.sendToAdmins({
+            "type": "delete",
+            "data": {
+                "id": roomID
+            }
+        })
 
     async def _getState(self, msg: dict) -> None:
         logger.info(self._rMgr.buildState())

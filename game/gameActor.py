@@ -26,7 +26,8 @@ class GameActor():
             "minPlayers": self.game.minPlayers,
             "title": self.game.name,
             "id": self.id,
-            "state": self.game.getState()
+            "state": self.game.getState(),
+            "description": self.game.description
         }
 
     async def run(self):
