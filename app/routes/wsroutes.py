@@ -8,7 +8,7 @@ from game.gameActor import GameActor
 from app.models.verify import RegisterPacket, DashRegMsg
 from app.models.datastructs import StateModel
 from app.auth.session import isAuthenticated
-from app.auth.crypt import validate_csrf
+from app.auth.crypt import validateCsrf
 from pydantic import ValidationError, model_validator
 from typing import cast
 
@@ -43,7 +43,7 @@ async def dashboard(ws: WebSocket):
         return
 
     # step 3: actually validate the csrf
-    if not validate_csrf(ws, authMsg.csrf):
+    if not validateCsrf(ws, authMsg.csrf):
         await ws.send_json({
             "type": "error",
             "errorType": f"Invalid session. Retry after reloading the page."

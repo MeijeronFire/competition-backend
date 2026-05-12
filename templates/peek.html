@@ -1,0 +1,6 @@
+{% block scripts %}
+<script>
+    window.CSRF_TOKEN = "{{ csrf }}";
+</script>
+<script src="{{ url_for('static', path='/js/peek.js') }}"></script>
+{% endblock %}
