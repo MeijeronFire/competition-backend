@@ -30,6 +30,7 @@ class GuessMsg(BaseModel):
 class Example():
     def __init__(self):
         self.name = "Example"
+        self.description = "placeholder"
         self.UUIDs: list[UUID] = []
         self.genericState: list = []
         self.playerNames: dict[UUID, str] = {}

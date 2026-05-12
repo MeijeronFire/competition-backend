@@ -31,6 +31,7 @@ class Othello():
         self.points: dict[UUID, int] = {}
         self.turnNr = 2
         self.minPlayers = 2
+        self.description = "placeholder"
 
     def getState(self):
         return {}

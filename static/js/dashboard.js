@@ -7,7 +7,7 @@ ws.onmessage = (e) => {
     console.log(e.data)
     switch (msg.type) {
         case "create":
-            createCard(msg.data)
+            addCard(msg.data)
             break;
         case "fullState":
             // first clear all cards
@@ -15,10 +15,11 @@ ws.onmessage = (e) => {
 
             // then create all new ones
             for (const [key, value] of Object.entries(msg.data)) {
-                createCard(value);
+                addCard(value);
             }
             break;
         case "delete":
+            removeCard(msg.data)
             break;
         default:
             console.log("warning: incomming ws message cannot be parsed")
@@ -45,21 +46,6 @@ async function getTotalState() {
     }));
 }
 
-/////////////////////////////////////////////////////////////////////
-// dealing with global state and rendering cards
-// the local state looks like this:
-/*
-{
-    <card-id (int)> : {
-        "playerNr": <int>,
-        "minPlayers": <int>,
-        "title": "str"
-    },
-    <card-id (int)> : ...
-}
-*/
-localState = {}
-
 // flashing a warning if something is wrong
 function warn(msg, title = "Error") {
     const warning = document.createElement("div");
@@ -74,27 +60,104 @@ function warn(msg, title = "Error") {
     document.getElementById("alert-container").appendChild(warning);
 }
 
-// create a card
-function createCard(data) {
-    const card = document.createElement("div");
-    card.className = "col-3";
-    card.id = `card-${data.id}`;
-    card.innerHTML = `
-    <div class="card border-primary mb-3">
-        <div class="card-header">${data.playerNr}/${data.minPlayers}</div>
-        <button class="btn-close position-absolute top-0 end-0 card-close" id="btn-${data.id}"></button>
-        <div class="card-body">
-            <h4 class="card-title">${data.title}</h4>
-            <p class="card-text">Not quite sure what to put here just yet</p>
-        </div>
-    </div>
-    `;
+/////////////////////////////////////////////////////////////////////
+// abstract dealing with global state and rendering cards
+// the local state looks like this:
+/*
+{
+    <card-id (int)> : {
+        "playerNr": <int>,
+        "minPlayers": <int>,
+        "title": <str>,
+        "id": <id>,
+        "state": <abstract representation of state>
+    },
+    <card-id (int)> : ...
+}
+*/
+const localState = {
+    cards: new Map() // id -> card data
+};
+
+const domMap = new Map(); // id -> DOM element
+
+function addCard(cardJSON) {
+    localState.cards.set(cardJSON.id, cardJSON);
+
+    const card = createCard(cardJSON);
+    domMap.set(cardJSON.id, card);
 
     document.getElementById("card-container").appendChild(card);
 }
 
+function updateCard(cardJSON) {
+    // we get the ID of the card to be updated from the cardJSON, so
+    // we only need one argument
+    // first check if it exists
+    oldCardJSON = localState.cards.get(cardJSON.id)
+    if (!oldCardJSON) {
+        console.log("Error! Provided card JSON does not exist -> can not be updated");
+        return;
+    }
+
+    // update / overwrite part of the stored JSON itself
+    Object.assign(oldCardJSON, cardJSON);
+
+    card = domMap.get(cardJSON.id);
+    if (!card) {
+        console.log("Error! Provided card DOM element does not exist -> can not be updated");
+        return;
+    }
+    parchCardDOM(card, cardJSON);
+}
+
+// delete the card by the JSON description of it
+function removeCard(cardJSON) {
+    // first delete it from the local state 
+    localState.cards.delete(cardJSON.id);
+
+    // then from the dom
+    const card = domMap.get(cardJSON.id);
+    if (card) {
+        card.remove();
+        domMap.delete(cardJSON.id);
+    }
+}
+
+/////////////////////////////////////////////////////////////////////
+// implementation of the abstract functions above
+// create a card
+function createCard(cardJSON) {
+    const card = document.createElement("div");
+    injectCardHTML(card, cardJSON);
+    return card;
+}
+
+// patch / update a card. Takes card (DOM element) and the JSON description of it
+function patchCardDOM(card, cardJSON) {
+    injectCardHTML(card, cardJSON);
+}
+
+// delete a card
+
+// enter the HTML for a card into an element of description `cardJSON'
+function injectCardHTML(card, cardJSON) {
+    card.className = "col-3";
+    card.id = `card-${cardJSON.id}`;
+    card.innerHTML = `
+    <div class="card border-primary mb-3">
+        <div class="card-header">${cardJSON.playerNr}/${cardJSON.minPlayers}</div>
+        <button class="btn-close position-absolute top-0 end-0 card-close" id="btn-${cardJSON.id}"></button>
+        <div class="card-body">
+            <h4 class="card-title">${cardJSON.title}</h4>
+            <p class="card-text">${cardJSON.description}</p>
+        </div>
+    </div>
+    `;
+}
+
 // clear all cards
-function clearCards(data) {
+function clearCards() {
     document.getElementById("card-container").innerHTML = "";
 }
 
