@@ -74,8 +74,8 @@ async def dashboard(ws: WebSocket):
         state.supervisor.admins.remove(connectedUser.uuid)
 
 
-@router.websocket("/ws/{room_id}")
-async def websocket_endpoint(ws: WebSocket, room_id: int):
+@router.websocket("/ws/{roomID}")
+async def websocket_endpoint(ws: WebSocket, roomID: int):
     state = cast(StateModel, ws.app.state)
     # after this point, never access the websocket object directly
     connectedUser = await initClient(ws)
@@ -101,7 +101,7 @@ async def websocket_endpoint(ws: WebSocket, room_id: int):
 
     # now we see if the specified room indeed exists
     try:
-        room = state.rMgr.rooms[room_id]
+        room = state.rMgr.rooms[roomID]
     except (KeyError, ValueError):
         print(
             f"client {connectedUser} sent an incorrect JSON registration packet.")

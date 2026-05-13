@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Page not found!{% endblock %}
+{% block content%}
+{# TODO: make it slightly more "error" looking #}
+<h4>Page not found!</h4>
+<p class="mb-3">
+    {{ msg }}
+</p>
+<p class="mb-3">
+    <a href="/" class="btn btn-primary w-20" type="submit">Go home</a>
+</p>
+{% endblock%}

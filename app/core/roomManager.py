@@ -8,19 +8,11 @@ from game import GameActor
 from game import Uber, Othello, Example
 
 from app.auth.crypt import computeHash
+from app.utils import log_async_error
 
 from random import randint
 
 import traceback
-
-
-def log_async_error(task: asyncio.Task):
-    try:
-        task.result()
-    except asyncio.CancelledError:
-        pass
-    except Exception as e:
-        traceback.print_exc()
 
 
 class RoomManager():

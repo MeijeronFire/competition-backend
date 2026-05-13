@@ -4,13 +4,7 @@
 import asyncio
 import traceback
 from abc import ABC, abstractmethod
-
-
-def log_async_error(task: asyncio.Task):
-    try:
-        task.result()
-    except:
-        traceback.print_exc()
+from app.utils import log_async_error
 
 
 class Actor(ABC):
@@ -25,7 +19,10 @@ class Actor(ABC):
     async def stop(self) -> None:
         if self._task:
             self._task.cancel()
-            await self._task
+            try:
+                await self._task
+            except asyncio.CancelledError:
+                pass
 
     @abstractmethod
     async def _read(self) -> None:
