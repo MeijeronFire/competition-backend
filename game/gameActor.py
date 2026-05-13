@@ -5,6 +5,7 @@ import asyncio
 from app.core import roomManager
 from game.models import Game
 from uuid import UUID
+import random
 
 
 class GameActor():
@@ -26,8 +27,24 @@ class GameActor():
             "minPlayers": self.game.minPlayers,
             "title": self.game.name,
             "id": self.id,
-            "state": self.game.getState(),
-            "description": self.game.description
+            "gameState": self.game.getState(),
+            "description": self.game.description,
+            "borderType": getattr(self.game, "borderType", random.choice([
+                "primary",
+                "secondary",
+                "success",
+                "danger",
+                "warning",
+                "info",
+                "light",
+                "dark"
+            ])),
+            "roomState": [
+                {
+                    "type": "danger",
+                    "msg": "empty"
+                }
+            ] if len(self.game.UUIDs) == 0 else None
         }
 
     async def run(self):

@@ -5,24 +5,15 @@ from contextlib import asynccontextmanager
 import asyncio
 import traceback
 from fastapi import FastAPI
-from typing import Tuple, Dict, cast
+from typing import cast
 from uuid import UUID
 
-from game import Uber
-
-from app.core import Client
 from app.core import ConnectionMgr
 from app.core import RoomManager
 from app.core import Sender
 from app.core import GameSupervisor
 from app.models.datastructs import StateModel
-
-
-def log_async_error(task: asyncio.Task):
-    try:
-        task.result()
-    except:
-        traceback.print_exc()
+from app.utils import log_async_error
 
 
 @asynccontextmanager
@@ -51,6 +42,8 @@ async def lifespan(app: FastAPI):
     yield
 
     await sender.stop()
+    # we don't really care about stopping all games, since no states persist
+    print("seomth")
 
     # if gameSupervisorTask:
     # gameSupervisorTask.cancel()

@@ -88,17 +88,24 @@ def logout(request: Request, csrf: Annotated[str, Form()]):
     return RedirectResponse(url=request.url_for("login"), status_code=303)
 
 
-@router.get("/peek")
-async def peek(request: Request):
+@router.get("/peek/{roomID}")
+async def peek(request: Request, roomID: int):
     state = cast(StateModel, request.app.state)
     if not isAuthenticated(request):
         return RedirectResponse(url=request.url_for("login"), status_code=303)
 
     # logic if logged in
+    # first we have to see if the room exists
+    if roomID not in state.rMgr.rooms.keys():
+        return templates.TemplateResponse("page_not_found.html", {
+            "request": request,
+            "msg": "requested room ID does not exist."
+        })
     request.session["csrf"] = generateCsrf()
     return templates.TemplateResponse("peek.html", {
         "request": request,
         "csrf": request.session["csrf"],
+        "roomID": roomID
     })
 
 # to allow anyone to see the icon, not that important

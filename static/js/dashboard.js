@@ -64,13 +64,30 @@ function warn(msg, title = "Error") {
 // abstract dealing with global state and rendering cards
 // the local state looks like this:
 /*
+here any bootstrap color / border / badge is one of the following:
+    "primary",
+    "secondary",
+    "success",
+    "danger",
+    "warning",
+    "info",
+    "light",
+    "dark"
 {
     <card-id (int)> : {
         "playerNr": <int>,
         "minPlayers": <int>,
         "title": <str>,
         "id": <id>,
-        "state": <abstract representation of state>
+        "gameState": <abstract representation of state>,
+        "description": <str>,
+        "borderType": <bootstrap border type (str)>
+        "roomState": [
+            {
+                "type": <bootstrap badge type (str)>,
+                "msg": <bootstrap badge msg (str)>
+            }
+        ]
     },
     <card-id (int)> : ...
 }
@@ -145,14 +162,23 @@ function injectCardHTML(card, cardJSON) {
     card.className = "col-3";
     card.id = `card-${cardJSON.id}`;
     card.innerHTML = `
-    <div class="card border-primary mb-3">
-        <div class="card-header">${cardJSON.playerNr}/${cardJSON.minPlayers}</div>
+    <div class="card border-${cardJSON.borderType} mb-3">
+        <div class="card-header">
+        ${cardJSON.playerNr}/${cardJSON.minPlayers}
+        ${cardJSON.roomState?.length
+            ? cardJSON.roomState.map(badge => `
+            <span class="badge rounded-pill bg-${badge.type}">${badge.msg}</span>
+            `).join("")
+            : ""
+        }
+        </div >
         <button class="btn-close position-absolute top-0 end-0 card-close" id="btn-${cardJSON.id}"></button>
         <div class="card-body">
             <h4 class="card-title">${cardJSON.title}</h4>
             <p class="card-text">${cardJSON.description}</p>
+            <a href="/peek/${cardJSON.id}" class="btn btn-secondary w-100">Peek</a>
         </div>
-    </div>
+    </div >
     `;
 }
 
