@@ -11,5 +11,5 @@ echo "This program comes with ABSOLUTELY NO WARRANTY; " \
   --host 0.0.0.0 \
   --port 8000 \
   --ssl-keyfile key.pem \
-  --ssl-certfile cert.pem \
-  --reload # DO NOT, repeat DO NOT run reload in prod!!!!!
+  --ssl-certfile cert.pem
+  #--reload # DO NOT, repeat DO NOT run reload in prod!!!!!

@@ -2,9 +2,10 @@
 const ws = new WebSocket(`wss://${window.location.host}/ws/dashboard`)
 
 // bind an onmessage
-ws.onmessage = (e) => {
+ws.onmessage = async (e) => {
     const msg = JSON.parse(e.data);
-    console.log(e.data)
+    // the message we got
+    // console.log(e.data)
     switch (msg.type) {
         case "create":
             addCard(msg.data)
@@ -24,6 +25,16 @@ ws.onmessage = (e) => {
         default:
             console.log("warning: incomming ws message cannot be parsed")
             break;
+    }
+    // compare to the hash we have computed
+    const hash = await hashCanonicalJSON(localState.cards)
+    // now if they differ we call again
+    if (hash != msg.stateHash && msg.type != "fullState") {
+        console.log(`requesting again, ${hash} != ${msg.stateHash}, ${msg.stateHash != hash}`)
+        await ws.send(JSON.stringify({
+            action: "getState",
+            data: {}
+        }));
     }
 };
 
@@ -207,7 +218,7 @@ document.addEventListener("click", (e) => {
             roomID: id
         }
     });
-    console.log(msg);
+    // console.log(msg);
     ws.send(msg);
 });
 

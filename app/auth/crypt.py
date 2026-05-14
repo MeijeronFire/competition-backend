@@ -10,7 +10,11 @@ import csv
 from fastapi import Request, WebSocket
 from typing import Union
 
+import logging
+
 _Connection = Union[Request, WebSocket]
+
+logger = logging.getLogger(__name__)
 
 
 def generateCsrf():
@@ -45,11 +49,12 @@ def validatePassword(username: str, password: str) -> bool:
 
 
 # a way to calculate the hash in a consistent way
-def computeHash(obj):
+def computeJSONHash(obj):
     jsonString = json.dumps(
         obj,
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,
     )
+    # logger.info(jsonString)
     return hashlib.sha256(jsonString.encode()).hexdigest()
