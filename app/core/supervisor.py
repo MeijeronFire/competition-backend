@@ -10,6 +10,7 @@ from app.core import RoomManager
 import asyncio
 from pydantic import ValidationError
 from uuid import UUID
+from app.auth.crypt import computeJSONHash
 
 import logging
 # TODO: replace most print statements by LOG statements throughout this code
@@ -19,21 +20,18 @@ logger = logging.getLogger(__name__)
 class GameSupervisor():
     def __init__(
         self,
-        queue: asyncio.Queue[tuple[UUID, dict]],
         rMgr: RoomManager
     ):
-        self._queue = queue
+        self._adminOutbox = rMgr.adminOutbox
         self._rMgr = rMgr
 
         self._task: asyncio.Task[dict | None] | None = None
         self.admins: list[UUID] = []
 
-    async def sendToAdmins(self, msg: dict) -> None:
-        for admin in self.admins:
-            await self._queue.put((
-                admin,
-                msg
-            ))
+    def _generateStateHash(self) -> str:
+        state = self._rMgr.buildState()
+        logger.info(f"{state} with hash {computeJSONHash(state)}")
+        return computeJSONHash(state)
 
     async def _create(self, data: dict[str, str]) -> None:
         """
@@ -49,9 +47,10 @@ class GameSupervisor():
         if roomID is None:
             return  # do some better error handling here
 
-        await self.sendToAdmins({
+        await self._adminOutbox.put({
             "type": "create",
             "data": self._rMgr.rooms[roomID].toState(),
+            "stateHash": self._generateStateHash()
         })
 
     def _update(self, data: dict) -> None:
@@ -76,18 +75,20 @@ class GameSupervisor():
         roomID = msg.roomID
         await self._rMgr.delete(roomID)
         # and inform users of the delete
-        await self.sendToAdmins({
+        await self._adminOutbox.put({
             "type": "delete",
             "data": {
                 "id": roomID
-            }
+            },
+            "stateHash": self._generateStateHash()
         })
 
     async def _getState(self, msg: dict) -> None:
         logger.info(self._rMgr.buildState())
-        await self.sendToAdmins({
+        await self._adminOutbox.put({
             "type": "fullState",
-            "data": self._rMgr.buildState()
+            "data": self._rMgr.buildState(),
+            "stateHash": self._generateStateHash()
         })
 
     async def parse(self, action: str, msg: dict):

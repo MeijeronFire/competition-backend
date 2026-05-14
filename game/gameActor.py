@@ -20,6 +20,16 @@ class GameActor():
         self.inbox = inbox
         self.outbox = outbox
         self.id = id
+        self.borderType = getattr(self.game, "borderType", random.choice([
+            "primary",
+            "secondary",
+            "success",
+            "danger",
+            "warning",
+            "info",
+            "light",
+            "dark"
+        ]))
 
     def toState(self):
         return {
@@ -29,16 +39,7 @@ class GameActor():
             "id": self.id,
             "gameState": self.game.getState(),
             "description": self.game.description,
-            "borderType": getattr(self.game, "borderType", random.choice([
-                "primary",
-                "secondary",
-                "success",
-                "danger",
-                "warning",
-                "info",
-                "light",
-                "dark"
-            ])),
+            "borderType": self.borderType,
             "roomState": [
                 {
                     "type": "danger",

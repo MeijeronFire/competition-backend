@@ -54,7 +54,7 @@ async def dashboard(ws: WebSocket):
 
     # we can add the user to the list of players we know
     state.cMgr.connect(connectedUser)
-    state.supervisor.admins.append(connectedUser.uuid)
+    state.adminSender.addAdmin(connectedUser)
 
     # Now we are in the clear and we can start parsing messages.
     # do this until the websocket disconnects unexpectedly
@@ -68,10 +68,10 @@ async def dashboard(ws: WebSocket):
             await state.supervisor.parse(msg["action"], msg["data"])
     except WebSocketDisconnect:
         # on disconnect run this hook
-        print(f"Disconnected {connectedUser.uuid}")
+        print(f"Disconnected {connectedUser}")
         # delete it from known connections
         state.cMgr.disconnect(connectedUser.uuid)
-        state.supervisor.admins.remove(connectedUser.uuid)
+        state.adminSender.popAdmin(connectedUser)
 
 
 @router.websocket("/ws/{roomID}")
