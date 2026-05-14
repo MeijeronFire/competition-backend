@@ -4,5 +4,6 @@
 from game.uber import Uber
 from game.othello import Othello
 from game.example import Example
+from game.testgame import TestGame
 
 from game.gameActor import GameActor

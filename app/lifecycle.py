@@ -5,24 +5,16 @@ from contextlib import asynccontextmanager
 import asyncio
 import traceback
 from fastapi import FastAPI
-from typing import Tuple, Dict, cast
+from typing import cast
 from uuid import UUID
 
-from game import Uber
-
-from app.core import Client
 from app.core import ConnectionMgr
 from app.core import RoomManager
 from app.core import Sender
+from app.core import AdminSender
 from app.core import GameSupervisor
 from app.models.datastructs import StateModel
-
-
-def log_async_error(task: asyncio.Task):
-    try:
-        task.result()
-    except:
-        traceback.print_exc()
+from app.utils import log_async_error
 
 
 @asynccontextmanager
@@ -32,25 +24,35 @@ async def lifespan(app: FastAPI):
     # we block allowing new msgs
     # inbox: asyncio.Queue[Tuple[Client, Dict]] = asyncio.Queue(maxsize = 100)
     outbox: asyncio.Queue[tuple[UUID, dict]] = asyncio.Queue(maxsize=100)
-    app.state.outbox = outbox
+    adminOutbox: asyncio.Queue[dict] = asyncio.Queue(maxsize=100)
 
-    rMgr = RoomManager(outbox)
+    app.state.outbox = outbox
+    app.state.outbox = adminOutbox
+
+    rMgr = RoomManager(outbox, adminOutbox)
     app.state.rMgr = rMgr
 
     cMgr = ConnectionMgr()
     app.state.cMgr = cMgr
 
-    supervisor = GameSupervisor(outbox, rMgr)
+    supervisor = GameSupervisor(rMgr)
     app.state.supervisor = supervisor
 
     # now we instantiate the sender postoffice!
     sender = Sender(outbox, cMgr)
-    app.state.sender = sender
+    app.state.sender = sender  # TODO: see where this is used, might be redundant
     await sender.start()
+
+    # Also instantiate the admin sender postoffice!
+    adminSender = AdminSender(adminOutbox, cMgr, supervisor)
+    app.state.adminSender = adminSender
+    await adminSender.start()
 
     yield
 
     await sender.stop()
+    await adminSender.start()
+    # we don't really care about stopping all games, since no states persist
 
     # if gameSupervisorTask:
     # gameSupervisorTask.cancel()

@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Otto Crawford
 
 from random import randint
+from typing import Any, Awaitable, Callable
 from pydantic import BaseModel, ConfigDict, ValidationError
 from uuid import UUID
 from game.models import Game
@@ -25,7 +26,7 @@ class fillMessage(BaseModel):
 class Uber():
     def __init__(self) -> None:
         self.name = "Uber"
-        self.description = "placeholder"
+        self.description = f"""<span class="text-danger">Demonstration of HTML injection</span>"""
         self.minPlayers = 2
 
         self.glasses = [0, 0, 0, 0, 0, 0]
@@ -40,6 +41,9 @@ class Uber():
         self._task: asyncio.Task[None] | None = None
         self._sendQueue: asyncio.Queue[dict | None] = asyncio.Queue()
         self._recvQueue: asyncio.Queue[dict] = asyncio.Queue()
+        # bit of an ugly hack, but it will work
+        self._sendToSupervisor: Callable[[dict[Any, Any]], Awaitable[None]]
+        self.renewStateEvent = asyncio.Event()
 
     def getState(self):
         return {}

@@ -2,9 +2,10 @@
 const ws = new WebSocket(`wss://${window.location.host}/ws/dashboard`)
 
 // bind an onmessage
-ws.onmessage = (e) => {
+ws.onmessage = async (e) => {
     const msg = JSON.parse(e.data);
-    console.log(e.data)
+    // the message we got
+    // console.log(e.data)
     switch (msg.type) {
         case "create":
             addCard(msg.data)
@@ -18,12 +19,26 @@ ws.onmessage = (e) => {
                 addCard(value);
             }
             break;
+        case "update":
+            updateCard(msg.data)
+            break;
         case "delete":
             removeCard(msg.data)
             break;
         default:
             console.log("warning: incomming ws message cannot be parsed")
             break;
+    }
+    // compare to the hash we have computed
+    console.log(canonicalJSONStringify(localState.cards))
+    const hash = await hashCanonicalJSON(localState.cards)
+    // now if they differ we call again
+    if (hash != msg.stateHash && msg.type != "fullState") {
+        console.log(`requesting again, ${hash} != ${msg.stateHash}, ${msg.stateHash != hash}`)
+        await ws.send(JSON.stringify({
+            action: "getState",
+            data: {}
+        }));
     }
 };
 
@@ -64,13 +79,30 @@ function warn(msg, title = "Error") {
 // abstract dealing with global state and rendering cards
 // the local state looks like this:
 /*
+here any bootstrap color / border / badge is one of the following:
+    "primary",
+    "secondary",
+    "success",
+    "danger",
+    "warning",
+    "info",
+    "light",
+    "dark"
 {
     <card-id (int)> : {
         "playerNr": <int>,
         "minPlayers": <int>,
         "title": <str>,
         "id": <id>,
-        "state": <abstract representation of state>
+        "gameState": <abstract representation of state>,
+        "description": <str>,
+        "borderType": <bootstrap border type (str)>
+        "roomState": [
+            {
+                "type": <bootstrap badge type (str)>,
+                "msg": <bootstrap badge msg (str)>
+            }
+        ]
     },
     <card-id (int)> : ...
 }
@@ -94,6 +126,7 @@ function updateCard(cardJSON) {
     // we get the ID of the card to be updated from the cardJSON, so
     // we only need one argument
     // first check if it exists
+    // console.log(cardJSON)
     oldCardJSON = localState.cards.get(cardJSON.id)
     if (!oldCardJSON) {
         console.log("Error! Provided card JSON does not exist -> can not be updated");
@@ -108,7 +141,7 @@ function updateCard(cardJSON) {
         console.log("Error! Provided card DOM element does not exist -> can not be updated");
         return;
     }
-    parchCardDOM(card, cardJSON);
+    patchCardDOM(card, cardJSON);
 }
 
 // delete the card by the JSON description of it
@@ -145,14 +178,23 @@ function injectCardHTML(card, cardJSON) {
     card.className = "col-3";
     card.id = `card-${cardJSON.id}`;
     card.innerHTML = `
-    <div class="card border-primary mb-3">
-        <div class="card-header">${cardJSON.playerNr}/${cardJSON.minPlayers}</div>
+    <div class="card border-${cardJSON.borderType} mb-3">
+        <div class="card-header">
+        ${cardJSON.playerNr}/${cardJSON.minPlayers}
+        ${cardJSON.roomState?.length
+            ? cardJSON.roomState.map(badge => `
+            <span class="badge rounded-pill bg-${badge.type}">${badge.msg}</span>
+            `).join("")
+            : ""
+        }
+        </div >
         <button class="btn-close position-absolute top-0 end-0 card-close" id="btn-${cardJSON.id}"></button>
         <div class="card-body">
             <h4 class="card-title">${cardJSON.title}</h4>
             <p class="card-text">${cardJSON.description}</p>
+            <a href="/peek/${cardJSON.id}" class="btn btn-secondary w-100">Peek</a>
         </div>
-    </div>
+    </div >
     `;
 }
 
@@ -181,7 +223,7 @@ document.addEventListener("click", (e) => {
             roomID: id
         }
     });
-    console.log(msg);
+    // console.log(msg);
     ws.send(msg);
 });
 

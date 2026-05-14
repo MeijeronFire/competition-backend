@@ -4,6 +4,7 @@ from app.core import (
     GameSupervisor,
     Sender
 )
+from app.core.outbox import AdminSender
 
 
 class StateModel:
@@ -11,3 +12,4 @@ class StateModel:
     cMgr: ConnectionMgr
     supervisor: GameSupervisor
     sender: Sender
+    adminSender: AdminSender

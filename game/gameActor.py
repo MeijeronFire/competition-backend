@@ -2,9 +2,14 @@
 # Copyright (C) 2026 Otto Crawford
 
 import asyncio
+from typing import AsyncIterable
+
+from platformdirs.android import _android_documents_folder
 from app.core import roomManager
+from app.utils import log_async_error
 from game.models import Game
 from uuid import UUID
+import random
 
 
 class GameActor():
@@ -13,12 +18,50 @@ class GameActor():
         game: Game,
         id: int,
         inbox: asyncio.Queue[tuple[UUID, dict]],
-        outbox: asyncio.Queue[tuple[UUID, dict]]
+        outbox: asyncio.Queue[tuple[UUID, dict]],
+        adminOutbox: asyncio.Queue[dict]
     ):
         self.game = game
         self.inbox = inbox
         self.outbox = outbox
+        self.adminOutbox = adminOutbox
+        self.renewStateEvent = game.renewStateEvent
         self.id = id
+        self.borderType = getattr(self.game, "borderType", random.choice([
+            "primary",
+            "secondary",
+            "success",
+            "danger",
+            "warning",
+            "info",
+            "light",
+            "dark"
+        ]))
+        self._ioTask: asyncio.Task[None | None] | None = None
+        self._adminTask: asyncio.Task[None | None] | None = None
+
+    async def start(self) -> None:
+        # init general message io
+        self._ioTask = asyncio.create_task(self.runIo())
+        self._ioTask.add_done_callback(log_async_error)
+        # init other IO
+        self._adminTask = asyncio.create_task(self.adminEvents())
+        self._adminTask.add_done_callback(log_async_error)
+
+    async def stop(self) -> None:
+        if self._ioTask:
+            self._ioTask.cancel()
+            try:
+                await self._ioTask
+            except asyncio.CancelledError:
+                pass
+
+        if self._adminTask:
+            self._adminTask.cancel()
+            try:
+                await self._adminTask
+            except asyncio.CancelledError:
+                pass
 
     def toState(self):
         return {
@@ -26,11 +69,45 @@ class GameActor():
             "minPlayers": self.game.minPlayers,
             "title": self.game.name,
             "id": self.id,
-            "state": self.game.getState(),
-            "description": self.game.description
+            "gameState": self.game.getState(),
+            "description": self.game.description,
+            "borderType": self.borderType,
+            "roomState":
+                # really weird syntax:
+                # create an empty list, add to it all elements
+                # from a list that may be empty and then add
+                # another list that may be empty
+                [] + ([{
+                    "type": "danger",
+                    "msg": "empty"
+                }] if len(self.game.UUIDs) == 0 else [])
+                + getattr(self.game, "roomState", [])
         }
 
-    async def run(self):
+    async def adminEvents(self):
+        while True:
+            # wait for us to have to resend a packet
+            await self.renewStateEvent.wait()
+            # resend the packet
+            # await self.adminOutbox.put({
+            #     "type": "update",
+            #     "data": {
+            #         "id": self.id,
+            #         "roomState": [{
+            #             "type": "danger",
+            #             "msg": "empty"
+            #         }] if len(self.game.UUIDs) == 0 else []
+            #         + getattr(self.game, "roomState", [])
+            #     }
+            # })
+            # and clear the state
+            await self.adminOutbox.put({
+                "type": "update",
+                "data": self.toState()
+            })
+            self.renewStateEvent.clear()
+
+    async def runIo(self):
         await self.game.start()
         while True:
             # TODO: make this depend on other factors!
@@ -41,7 +118,7 @@ class GameActor():
                 # print(f"{self.game.__str__()}: skipped. {len(self.game.UUIDs)} / 2")
                 continue
 
-            # the client object whos turn it is
+            # the client object who's turn it is
             sentTo = self.game.turnUUID()
             # tell client it is his turn
             await self.outbox.put((

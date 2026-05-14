@@ -14,6 +14,7 @@ from random import randint
 from pydantic import BaseModel, ValidationError
 from uuid import UUID
 from game.models import Game
+import asyncio
 
 # any incoming message needs to look like this. For example:
 # {
@@ -38,6 +39,7 @@ class Example():
         self.turnNr = 0
         self._nr: int = randint(1, 9)
         self.minPlayers = 2
+        self.renewStateEvent = asyncio.Event()
 
     def getState(self):
         return {}

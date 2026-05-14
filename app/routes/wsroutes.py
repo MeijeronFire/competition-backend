@@ -8,7 +8,7 @@ from game.gameActor import GameActor
 from app.models.verify import RegisterPacket, DashRegMsg
 from app.models.datastructs import StateModel
 from app.auth.session import isAuthenticated
-from app.auth.crypt import validate_csrf
+from app.auth.crypt import validateCsrf
 from pydantic import ValidationError, model_validator
 from typing import cast
 
@@ -43,7 +43,7 @@ async def dashboard(ws: WebSocket):
         return
 
     # step 3: actually validate the csrf
-    if not validate_csrf(ws, authMsg.csrf):
+    if not validateCsrf(ws, authMsg.csrf):
         await ws.send_json({
             "type": "error",
             "errorType": f"Invalid session. Retry after reloading the page."
@@ -54,7 +54,7 @@ async def dashboard(ws: WebSocket):
 
     # we can add the user to the list of players we know
     state.cMgr.connect(connectedUser)
-    state.supervisor.admins.append(connectedUser.uuid)
+    state.adminSender.addAdmin(connectedUser)
 
     # Now we are in the clear and we can start parsing messages.
     # do this until the websocket disconnects unexpectedly
@@ -68,14 +68,14 @@ async def dashboard(ws: WebSocket):
             await state.supervisor.parse(msg["action"], msg["data"])
     except WebSocketDisconnect:
         # on disconnect run this hook
-        print(f"Disconnected {connectedUser.uuid}")
+        print(f"Disconnected {connectedUser}")
         # delete it from known connections
         state.cMgr.disconnect(connectedUser.uuid)
-        state.supervisor.admins.remove(connectedUser.uuid)
+        state.adminSender.popAdmin(connectedUser)
 
 
-@router.websocket("/ws/{room_id}")
-async def websocket_endpoint(ws: WebSocket, room_id: int):
+@router.websocket("/ws/{roomID}")
+async def websocket_endpoint(ws: WebSocket, roomID: int):
     state = cast(StateModel, ws.app.state)
     # after this point, never access the websocket object directly
     connectedUser = await initClient(ws)
@@ -101,7 +101,7 @@ async def websocket_endpoint(ws: WebSocket, room_id: int):
 
     # now we see if the specified room indeed exists
     try:
-        room = state.rMgr.rooms[room_id]
+        room = state.rMgr.rooms[roomID]
     except (KeyError, ValueError):
         print(
             f"client {connectedUser} sent an incorrect JSON registration packet.")

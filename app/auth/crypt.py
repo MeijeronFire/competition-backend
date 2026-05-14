@@ -10,14 +10,18 @@ import csv
 from fastapi import Request, WebSocket
 from typing import Union
 
+import logging
+
 _Connection = Union[Request, WebSocket]
 
+logger = logging.getLogger(__name__)
 
-def generate_csrf():
+
+def generateCsrf():
     return secrets.token_urlsafe(32)
 
 
-def validate_csrf(connection: _Connection, csrf_token: str) -> bool:
+def validateCsrf(connection: _Connection, csrf_token: str) -> bool:
     csrf = connection.session.get("csrf")
     if not csrf or csrf != csrf_token:
         return False
@@ -25,7 +29,7 @@ def validate_csrf(connection: _Connection, csrf_token: str) -> bool:
 
 
 # lookup if a user is in the csv file
-def is_user(username: str) -> bool:
+def isUser(username: str) -> bool:
     with open("users.csv", "r") as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -35,7 +39,7 @@ def is_user(username: str) -> bool:
 
 
 # lookup if a password is correct, assuming user exists
-def validate_password(username: str, password: str) -> bool:
+def validatePassword(username: str, password: str) -> bool:
     with open("users.csv", "r") as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -45,11 +49,12 @@ def validate_password(username: str, password: str) -> bool:
 
 
 # a way to calculate the hash in a consistent way
-def computeHash(obj):
+def computeJSONHash(obj):
     jsonString = json.dumps(
         obj,
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,
     )
+    logger.info(jsonString)
     return hashlib.sha256(jsonString.encode()).hexdigest()

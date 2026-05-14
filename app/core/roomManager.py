@@ -5,39 +5,34 @@ import asyncio
 from uuid import UUID
 
 from game import GameActor
-from game import Uber, Othello, Example
+from game import Uber, Othello, Example, TestGame
 
-from app.auth.crypt import computeHash
+from app.auth.crypt import computeJSONHash
+from app.utils import log_async_error
 
 from random import randint
 
-import traceback
-
-
-def log_async_error(task: asyncio.Task):
-    try:
-        task.result()
-    except asyncio.CancelledError:
-        pass
-    except Exception as e:
-        traceback.print_exc()
-
 
 class RoomManager():
-    def __init__(self, outbox: asyncio.Queue[tuple[UUID, dict]]):
+    def __init__(
+        self,
+        outbox: asyncio.Queue[tuple[UUID, dict]],
+        adminOutbox: asyncio.Queue[dict]
+    ):
         self.rooms: dict[int, GameActor] = {}
-        self.tasks: dict[int, asyncio.Task] = {}
         self.outbox = outbox
+        self.adminOutbox = adminOutbox
         # THIS IS BAD
         # THIS IS BAD
         # THIS IS BAD
         self.games = {
             "uber": Uber,
             "othello": Othello,
-            "example": Example
+            "example": Example,
+            "testGame": TestGame
         }
 
-    def create(self, game: str) -> int | None:
+    async def create(self, game: str) -> int | None:
         # room_id = randint(10000, 99999)
         if game not in self.games.keys():
             # maybe should be raise ?
@@ -55,26 +50,22 @@ class RoomManager():
             self.games[game](),
             roomID,
             inbox,
-            self.outbox
+            self.outbox,
+            self.adminOutbox
         )
         self.rooms[roomID] = actor
-        self.tasks[roomID] = asyncio.create_task(actor.run())
-        self.tasks[roomID].add_done_callback(log_async_error)
+        await actor.start()
         return roomID
 
     async def delete(self, roomID: int) -> None:
+        toBeDel = self.rooms[roomID].game.name
         if roomID not in self.rooms.keys():
             print("useless ID provided.")
             return
-        gameName = self.rooms[roomID].game.name
-        self.tasks[roomID].cancel()
-        try:
-            await self.tasks[roomID]
-        except asyncio.CancelledError:
-            pass
-        self.tasks.pop(roomID)
+        await self.rooms[roomID].stop()
         self.rooms.pop(roomID)
-        print(f"\033[1;32mINFO:\t\033[0m  Killed {gameName} at {roomID}")
+        print(
+            f"\033[1;32mINFO:\t\033[0m  Killed {toBeDel} at {roomID}")
         # maybe call some sort of destructor on the object itself?
 
     # the "official" way to build the complete state
