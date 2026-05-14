@@ -100,6 +100,9 @@ class TestGame():
                 ]),
                 "msg": "Pr.OfConc."
             }]
+            self.description = "The quick brown fox <span class=\"text-warning\">" + \
+                random.choice(["jumps", "sits", "sleeps", "cries",
+                              "laughs"]) + "</span> over the lazy dog."
             self.renewStateEvent.set()
 
 
