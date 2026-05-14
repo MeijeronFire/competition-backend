@@ -28,7 +28,7 @@ class GameSupervisor():
         self._task: asyncio.Task[dict | None] | None = None
         self.admins: list[UUID] = []
 
-    def _generateStateHash(self) -> str:
+    def generateStateHash(self) -> str:
         state = self._rMgr.buildState()
         logger.info(f"{state} with hash {computeJSONHash(state)}")
         return computeJSONHash(state)
@@ -43,14 +43,14 @@ class GameSupervisor():
         except ValidationError:
             return
 
-        roomID = self._rMgr.create(msg.name)
+        roomID = await self._rMgr.create(msg.name)
         if roomID is None:
             return  # do some better error handling here
 
         await self._adminOutbox.put({
             "type": "create",
             "data": self._rMgr.rooms[roomID].toState(),
-            "stateHash": self._generateStateHash()
+            "stateHash": self.generateStateHash()
         })
 
     def _update(self, data: dict) -> None:
@@ -80,7 +80,7 @@ class GameSupervisor():
             "data": {
                 "id": roomID
             },
-            "stateHash": self._generateStateHash()
+            "stateHash": self.generateStateHash()
         })
 
     async def _getState(self, msg: dict) -> None:
@@ -88,7 +88,7 @@ class GameSupervisor():
         await self._adminOutbox.put({
             "type": "fullState",
             "data": self._rMgr.buildState(),
-            "stateHash": self._generateStateHash()
+            "stateHash": self.generateStateHash()
         })
 
     async def parse(self, action: str, msg: dict):

@@ -19,6 +19,9 @@ ws.onmessage = async (e) => {
                 addCard(value);
             }
             break;
+        case "update":
+            updateCard(msg.data)
+            break;
         case "delete":
             removeCard(msg.data)
             break;
@@ -27,6 +30,7 @@ ws.onmessage = async (e) => {
             break;
     }
     // compare to the hash we have computed
+    console.log(canonicalJSONStringify(localState.cards))
     const hash = await hashCanonicalJSON(localState.cards)
     // now if they differ we call again
     if (hash != msg.stateHash && msg.type != "fullState") {
@@ -122,6 +126,7 @@ function updateCard(cardJSON) {
     // we get the ID of the card to be updated from the cardJSON, so
     // we only need one argument
     // first check if it exists
+    // console.log(cardJSON)
     oldCardJSON = localState.cards.get(cardJSON.id)
     if (!oldCardJSON) {
         console.log("Error! Provided card JSON does not exist -> can not be updated");
@@ -136,7 +141,7 @@ function updateCard(cardJSON) {
         console.log("Error! Provided card DOM element does not exist -> can not be updated");
         return;
     }
-    parchCardDOM(card, cardJSON);
+    patchCardDOM(card, cardJSON);
 }
 
 // delete the card by the JSON description of it
