@@ -4,3 +4,4 @@ Global TODO:
 - explicit typing everywhere
 - fix poor naming
 - correctly identify all private and public attributes and methods
+- update readme & install instructions to reflect UV install
