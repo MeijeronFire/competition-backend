@@ -5,7 +5,7 @@ import asyncio
 from uuid import UUID
 
 from game import GameActor
-from game import Uber, Othello, Example
+from game import Uber, Othello, Example, TestGame
 
 from app.auth.crypt import computeJSONHash
 from app.utils import log_async_error
@@ -20,7 +20,6 @@ class RoomManager():
         adminOutbox: asyncio.Queue[dict]
     ):
         self.rooms: dict[int, GameActor] = {}
-        self._tasks: dict[int, asyncio.Task] = {}
         self.outbox = outbox
         self.adminOutbox = adminOutbox
         # THIS IS BAD
@@ -29,10 +28,11 @@ class RoomManager():
         self.games = {
             "uber": Uber,
             "othello": Othello,
-            "example": Example
+            "example": Example,
+            "testGame": TestGame
         }
 
-    def create(self, game: str) -> int | None:
+    async def create(self, game: str) -> int | None:
         # room_id = randint(10000, 99999)
         if game not in self.games.keys():
             # maybe should be raise ?
@@ -50,26 +50,22 @@ class RoomManager():
             self.games[game](),
             roomID,
             inbox,
-            self.outbox
+            self.outbox,
+            self.adminOutbox
         )
         self.rooms[roomID] = actor
-        self._tasks[roomID] = asyncio.create_task(actor.run())
-        self._tasks[roomID].add_done_callback(log_async_error)
+        await actor.start()
         return roomID
 
     async def delete(self, roomID: int) -> None:
+        toBeDel = self.rooms[roomID].game.name
         if roomID not in self.rooms.keys():
             print("useless ID provided.")
             return
-        gameName = self.rooms[roomID].game.name
-        self._tasks[roomID].cancel()
-        try:
-            await self._tasks[roomID]
-        except asyncio.CancelledError:
-            pass
-        self._tasks.pop(roomID)
+        await self.rooms[roomID].stop()
         self.rooms.pop(roomID)
-        print(f"\033[1;32mINFO:\t\033[0m  Killed {gameName} at {roomID}")
+        print(
+            f"\033[1;32mINFO:\t\033[0m  Killed {toBeDel} at {roomID}")
         # maybe call some sort of destructor on the object itself?
 
     # the "official" way to build the complete state

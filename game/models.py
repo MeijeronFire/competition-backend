@@ -3,6 +3,7 @@
 
 from typing import Protocol, runtime_checkable
 from uuid import UUID
+import asyncio
 
 
 @runtime_checkable
@@ -14,6 +15,7 @@ class Game(Protocol):
     points: dict[UUID, int]
     name: str
     description: str
+    renewStateEvent: asyncio.Event
 
     def getState(self) -> dict:
         ...

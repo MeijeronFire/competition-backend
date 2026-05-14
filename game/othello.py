@@ -5,6 +5,7 @@ from random import randint
 from pydantic import BaseModel, ConfigDict, ValidationError
 from uuid import UUID
 from game.models import Game
+import asyncio
 
 
 class moveMsg(BaseModel):
@@ -32,6 +33,7 @@ class Othello():
         self.turnNr = 2
         self.minPlayers = 2
         self.description = "placeholder"
+        self.renewStateEvent = asyncio.Event()
 
     def getState(self):
         return {}

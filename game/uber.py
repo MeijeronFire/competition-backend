@@ -43,6 +43,7 @@ class Uber():
         self._recvQueue: asyncio.Queue[dict] = asyncio.Queue()
         # bit of an ugly hack, but it will work
         self._sendToSupervisor: Callable[[dict[Any, Any]], Awaitable[None]]
+        self.renewStateEvent = asyncio.Event()
 
     def getState(self):
         return {}

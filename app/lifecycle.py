@@ -44,7 +44,7 @@ async def lifespan(app: FastAPI):
     await sender.start()
 
     # Also instantiate the admin sender postoffice!
-    adminSender = AdminSender(adminOutbox, cMgr)
+    adminSender = AdminSender(adminOutbox, cMgr, supervisor)
     app.state.adminSender = adminSender
     await adminSender.start()
 

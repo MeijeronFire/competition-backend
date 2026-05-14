@@ -32,7 +32,7 @@ class Client():
         self.userName = username
 
     def __str__(self) -> str:
-        return self.userName
+        return "< user 'self.userName'>"
 
 
 class ConnectionMgr:
