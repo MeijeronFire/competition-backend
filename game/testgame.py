@@ -48,7 +48,7 @@ class TestGame():
         # bit of an ugly hack, but it will work
         self.renewStateEvent = asyncio.Event()
 
-        self.closed = False
+        self.closed = True
 
     def getState(self):
         return {}
@@ -83,7 +83,7 @@ class TestGame():
     async def _gameLoop(self) -> None:
         # main game loop
         while True:
-            print('waiting')
+            # print('waiting')
             await asyncio.sleep(5)
             # we need some way to update the so-called "room-state"
             # since the message digest is calculated seperately, we

@@ -39,6 +39,9 @@ class GameActor():
         ]))
         self._ioTask: asyncio.Task[None | None] | None = None
         self._adminTask: asyncio.Task[None | None] | None = None
+        # we want to make sure that the game can not be joined on init,
+        # so we enforce an initial closed state
+        self.game.closed = True
 
     async def start(self) -> None:
         # init general message io

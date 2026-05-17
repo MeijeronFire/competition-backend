@@ -61,20 +61,6 @@ async function getTotalState() {
     }));
 }
 
-// flashing a warning if something is wrong
-function warn(msg, title = "Error") {
-    const warning = document.createElement("div");
-    warning.className = "alert alert-warning alert-dismissible";
-    warning.role = "alert";
-    warning.innerHTML = `
-        <h4 class="alert-heading mt-0">${title}</h4>
-        ${msg}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-
-    document.getElementById("alert-container").appendChild(warning);
-}
-
 /////////////////////////////////////////////////////////////////////
 // abstract dealing with global state and rendering cards
 // the local state looks like this:
@@ -162,19 +148,19 @@ function removeCard(cardJSON) {
 // create a card
 function createCard(cardJSON) {
     const card = document.createElement("div");
-    injectCardHTML(card, cardJSON);
+    injectAccordianItemHTML(card, cardJSON);
     return card;
 }
 
 // patch / update a card. Takes card (DOM element) and the JSON description of it
 function patchCardDOM(card, cardJSON) {
-    injectCardHTML(card, cardJSON);
+    injectAccordianItemHTML(card, cardJSON);
 }
 
 // delete a card
 
 // enter the HTML for a card into an element of description `cardJSON'
-function injectCardHTML(card, cardJSON) {
+function injectAccordianItemHTML(card, cardJSON) {
     card.className = "col-3";
     card.id = `card-${cardJSON.id}`;
     card.innerHTML = `
