@@ -34,6 +34,7 @@ class Othello():
         self.minPlayers = 2
         self.description = "placeholder"
         self.renewStateEvent = asyncio.Event()
+        self.closed = True
 
     def getState(self):
         return {}

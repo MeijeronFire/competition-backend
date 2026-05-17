@@ -63,6 +63,32 @@ class GameActor():
             except asyncio.CancelledError:
                 pass
 
+    # generate the badges displayed on the dashboard
+    def _genBadges(self):
+        # add arbitrary elements from the gameclass
+        badges = [] + getattr(self.game, "roomState", [])
+
+        # (empty)
+        if len(self.game.UUIDs) == 0:
+            badges.append({
+                "type": "danger",
+                "msg": "empty"
+            })
+
+        # (closed)
+        if self.game.closed:
+            badges.append({
+                "type": "warning",
+                "msg": "closed"
+            })
+        # (open)
+        else:
+            badges.append({
+                "type": "primary",
+                "msg": "open"
+            })
+        return badges
+
     def toState(self):
         return {
             "playerNr": len(self.game.UUIDs),
@@ -72,35 +98,13 @@ class GameActor():
             "gameState": self.game.getState(),
             "description": self.game.description,
             "borderType": self.borderType,
-            "roomState":
-                # really weird syntax:
-                # create an empty list, add to it all elements
-                # from a list that may be empty and then add
-                # another list that may be empty
-                [] + ([{
-                    "type": "danger",
-                    "msg": "empty"
-                }] if len(self.game.UUIDs) == 0 else [])
-                + getattr(self.game, "roomState", [])
+            "roomState": self._genBadges()
         }
 
     async def adminEvents(self):
         while True:
             # wait for us to have to resend a packet
             await self.renewStateEvent.wait()
-            # resend the packet
-            # await self.adminOutbox.put({
-            #     "type": "update",
-            #     "data": {
-            #         "id": self.id,
-            #         "roomState": [{
-            #             "type": "danger",
-            #             "msg": "empty"
-            #         }] if len(self.game.UUIDs) == 0 else []
-            #         + getattr(self.game, "roomState", [])
-            #     }
-            # })
-            # and clear the state
             await self.adminOutbox.put({
                 "type": "update",
                 "data": self.toState()

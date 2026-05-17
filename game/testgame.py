@@ -48,6 +48,8 @@ class TestGame():
         # bit of an ugly hack, but it will work
         self.renewStateEvent = asyncio.Event()
 
+        self.closed = False
+
     def getState(self):
         return {}
 

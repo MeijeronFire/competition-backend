@@ -16,6 +16,7 @@ class Game(Protocol):
     name: str
     description: str
     renewStateEvent: asyncio.Event
+    closed: bool  # if other players can join the game
 
     def getState(self) -> dict:
         ...

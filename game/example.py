@@ -40,6 +40,7 @@ class Example():
         self._nr: int = randint(1, 9)
         self.minPlayers = 2
         self.renewStateEvent = asyncio.Event()
+        self.closed = True
 
     def getState(self):
         return {}

@@ -44,6 +44,7 @@ class Uber():
         # bit of an ugly hack, but it will work
         self._sendToSupervisor: Callable[[dict[Any, Any]], Awaitable[None]]
         self.renewStateEvent = asyncio.Event()
+        self.closed = True
 
     def getState(self):
         return {}
