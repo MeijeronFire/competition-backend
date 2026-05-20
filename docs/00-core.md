@@ -1,0 +1,2 @@
+# Core design concepts
+In this document, we will discuss the core design principles and concepts to place the rest of the codebase in context. This includes mostly the philosophy behind the design and which components exists.
