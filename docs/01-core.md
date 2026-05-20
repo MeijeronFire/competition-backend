@@ -24,5 +24,8 @@ From the section above, we can determine a small list of requirements:
     - To show the state of current problems or rooms
     - Some way to properly secure the admin interface
 
-### Which technologies can facilitate that?
-To actually implement this abstract 
+### How can we implement that?
+To actually implement this abstract idea, we can use the following:
+- FastAPI + pydantic for managing everything web related (websockets, websites)
+- A few asynchronous actors that continously wait for items to be pushed into queues to handle them. This can be done for receiving messages and for sending messages, and for managing the game rooms.
+- Builtin python libraries for hashing and for generating tokens.
