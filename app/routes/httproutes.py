@@ -17,7 +17,7 @@ from typing import Annotated, cast
 
 router = APIRouter()
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="app/templates")
 
 
 # HTML endpoint

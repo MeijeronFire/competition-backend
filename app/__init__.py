@@ -19,7 +19,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.lifecycle import lifespan
 
 app = FastAPI(lifespan=lifespan)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 app.add_middleware(
     SessionMiddleware,
