@@ -58,6 +58,11 @@ class TestGame():
         self.playerNames[uuid] = username
         self.points[uuid] = 0
 
+    def popPlayer(self, uuid: UUID) -> None:
+        self.UUIDs.remove(uuid)
+        self.playerNames.pop(uuid)
+        self.points.pop(uuid)
+
     def turn(self):
         if len(self.playerNames) == 0:
             raise Exception("Error: no players, so cannot get turn.")

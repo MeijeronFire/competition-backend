@@ -4,6 +4,7 @@ from app.models.primitives import Actor
 from app.models.verify import (
     DashCreateMsg,
     DashDeleteMsg,
+    DashGetRoomStateMsg,
     DashUpdateMsg
 )
 from app.core import RoomManager
@@ -30,7 +31,7 @@ class GameSupervisor():
 
     def generateStateHash(self) -> str:
         state = self._rMgr.buildState()
-        logger.info(f"{state} with hash {computeJSONHash(state)}")
+        # logger.info(f"{state} with hash {computeJSONHash(state)}")
         return computeJSONHash(state)
 
     async def _create(self, data: dict[str, str]) -> None:
@@ -84,12 +85,33 @@ class GameSupervisor():
         })
 
     async def _getState(self, msg: dict) -> None:
-        logger.info(self._rMgr.buildState())
+        # logger.info(self._rMgr.buildState())
         await self._adminOutbox.put({
             "type": "fullState",
             "data": self._rMgr.buildState(),
             "stateHash": self.generateStateHash()
         })
+
+    async def _getRoomState(self, data: dict) -> None:
+        try:
+            msg = DashGetRoomStateMsg.model_validate(data)
+        except ValidationError:
+            logger.error(
+                f"Could not verify msg {data}, is not a valid DashGetRoomStateMsg.")
+            return
+
+        roomState = dict([(str(uuid), {
+            "name": self._rMgr.rooms[msg.roomID].game.playerNames[uuid],
+            "UUID": str(uuid)
+        }) for uuid in self._rMgr.rooms[msg.roomID].game.UUIDs])
+
+        msg = {
+            "type": "fullRoomState",
+            "data": roomState,
+            "stateHash": computeJSONHash(roomState)
+        }
+        logger.info(msg)
+        await self._adminOutbox.put(msg)
 
     async def parse(self, action: str, msg: dict):
         # implementation of our simple CRUD interface
@@ -102,5 +124,7 @@ class GameSupervisor():
                 await self._delete(msg)
             case "getState":
                 await self._getState(msg)
+            case "getRoomState":
+                await self._getRoomState(msg)
             case _:
                 raise Exception("Improper command provided to supervisor")

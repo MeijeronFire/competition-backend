@@ -28,7 +28,8 @@ class AdminSender(Actor):
             msg = await self.queue.get()
             # send it & wrap it in a proper hash
             for admin in self._admins:
-                await admin.ws.send_json({**msg, "stateHash": self._supervisor.generateStateHash()})
+                await admin.ws.send_json(msg)
+                # await admin.ws.send_json({**msg, "stateHash": self._supervisor.generateStateHash()})
 
             # mark as done, repeat
             self.queue.task_done()

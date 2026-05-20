@@ -34,3 +34,7 @@ class DashUpdateMsg(BaseModel):
 
 class DashDeleteMsg(BaseModel):
     roomID: int
+
+
+class DashGetRoomStateMsg(BaseModel):
+    roomID: int

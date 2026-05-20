@@ -55,6 +55,11 @@ class Othello():
         self.playerNames[uuid] = username
         self.points[uuid] = 0
 
+    def popPlayer(self, uuid: UUID) -> None:
+        self.UUIDs.remove(uuid)
+        self.playerNames.pop(uuid)
+        self.points.pop(uuid)
+
     async def parseMessage(self, data: dict) -> dict | None:
         msg = moveMsg.model_validate(data)
         match msg.choice:

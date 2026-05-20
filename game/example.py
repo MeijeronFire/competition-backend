@@ -61,6 +61,11 @@ class Example():
         self.playerNames[uuid] = username
         self.points[uuid] = 0
 
+    def popPlayer(self, uuid: UUID) -> None:
+        self.UUIDs.remove(uuid)
+        self.playerNames.pop(uuid)
+        self.points.pop(uuid)
+
     def _newTurn(self) -> None:
         self._nr = randint(1, 9)
 

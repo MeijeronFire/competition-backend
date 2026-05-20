@@ -116,18 +116,18 @@ async def websocket_endpoint(ws: WebSocket, roomID: int):
     # now we know we have a correct JSON packet so we can start interpreting the connection
     connectedUser.uname(regPacket.name)
     # add this client to the list of players
-    room.game.addPlayer(connectedUser.uuid, regPacket.name)
-    # MAKE THIS CONDITIONAL
-    # which function to execute when the user receives a packet
-
-    # we send a response to the user
-    await ws.send_json({
-        "type": "regResp",
-        "msg": "Registration OK."
-    })
-
-    # do this until the websocket disconnects unexpectedly
     try:
+        room.game.addPlayer(connectedUser.uuid, regPacket.name)
+        # MAKE THIS CONDITIONAL
+        # which function to execute when the user receives a packet
+
+        # we send a response to the user
+        await ws.send_json({
+            "type": "regResp",
+            "msg": "Registration OK."
+        })
+
+        # do this until the websocket disconnects unexpectedly
         while True:
             data = await ws.receive_json()
             # print(f"We got data: {data}")
@@ -137,5 +137,5 @@ async def websocket_endpoint(ws: WebSocket, roomID: int):
         # delete it from known connections
         state.cMgr.disconnect(connectedUser.uuid)
         # inform room that the user does not exist any longer
-        # room.game.delplayer(UUID) (?)
+        room.game.popPlayer(connectedUser.uuid)
         return

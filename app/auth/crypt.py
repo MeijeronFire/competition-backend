@@ -56,5 +56,5 @@ def computeJSONHash(obj):
         separators=(",", ":"),
         ensure_ascii=False,
     )
-    logger.info(jsonString)
+    # logger.info(jsonString)
     return hashlib.sha256(jsonString.encode()).hexdigest()

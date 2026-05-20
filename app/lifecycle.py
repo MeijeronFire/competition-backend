@@ -48,6 +48,8 @@ async def lifespan(app: FastAPI):
     app.state.adminSender = adminSender
     await adminSender.start()
 
+    await supervisor._create({"name": "testGame"})
+
     yield
 
     await sender.stop()

@@ -215,3 +215,6 @@ __marimo__/
 # openSSL keys
 key.pem
 cert.pem
+
+# the bootstrap css and html
+static/bootstrap/

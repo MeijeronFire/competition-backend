@@ -5,26 +5,35 @@ const ws = new WebSocket(`wss://${window.location.host}/ws/dashboard`)
 ws.onmessage = async (e) => {
     const msg = JSON.parse(e.data);
     // the message we got
-    // console.log(e.data)
+    console.log(e.data)
     switch (msg.type) {
-        case "OPTION_TMP":
+        case "fullRoomState":
+            // first clear all cards
+            clearItems();
+
+            // then create all new ones
+            for (const [key, value] of Object.entries(msg.data)) {
+                addAccordionItem(value);
+            }
             break;
         default:
             console.log("warning: incomming ws message cannot be parsed")
-            break;
+            return;
     }
     // compare to the hash we have computed
-    console.log(canonicalJSONStringify(localState.cards))
-    const hash = await hashCanonicalJSON(localState.cards)
+    // console.log(canonicalJSONStringify(localState))
+    // console.log(canonicalJSONStringify(msg))
+    // console.log(await hashCanonicalJSON(localState))
+    const hash = await hashCanonicalJSON(localState)
     // now if they differ we call again
-    if (hash != msg.stateHash && msg.type != "fullState") {
+    if (hash != msg.stateHash) {
         console.log(`requesting again, ${hash} != ${msg.stateHash}, ${msg.stateHash != hash}`)
-        await ws.send(JSON.stringify({
-            action: "getRoomState",
-            data: {
-                room: window.roomID
-            }
-        }));
+        // await ws.send(JSON.stringify({
+        //     action: "getRoomState",
+        //     data: {
+        //         roomID: window.roomID
+        //     }
+        // }));
     }
 };
 
@@ -44,7 +53,7 @@ async function getTotalState() {
     await ws.send(JSON.stringify({
         action: "getRoomState",
         data: {
-            room: window.roomID
+            roomID: window.roomID
         }
     }));
 }
@@ -112,7 +121,6 @@ function injectAccordianItemHTML(accordionItem, accordionItemJSON) {
     accordionItem.className = "accordion-item";
     accordionItem.id = `card-${accordionItemJSON.UUID}`;
     accordionItem.innerHTML = `
-        <div class="accordion-item">
             <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                     data-bs-target="#${accordionItemJSON.UUID}" aria-expanded="true" aria-controls="${accordionItemJSON.UUID}">
@@ -125,13 +133,20 @@ function injectAccordianItemHTML(accordionItem, accordionItemJSON) {
                     content tbd
                 </div>
             </div>
-        </div>
     `;
 }
 
 // clear all cards
 function clearItems() {
-    document.getElementById("playernames").innerHTML = "";
+    // TODO: remove everything except title of the accordion thingie
+    document.getElementById("playernames").innerHTML = `
+        <div class="accordion-item" id="title">
+            <h3 class="accordion-header">
+                Test
+            </h2>
+        </div>
+
+    `;
 }
 
 // get rid of a card

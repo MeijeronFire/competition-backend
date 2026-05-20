@@ -41,8 +41,12 @@ class RoomManager():
             return
 
         # so run until there is a proper random number
-        while (roomID := randint(10000, 99999)) in self.rooms.keys():
-            pass
+        # while (roomID := randint(10000, 99999)) in self.rooms.keys():
+            # pass
+        # TMP, for testing purposes
+        roomID = 1
+        if self.rooms.keys():
+            roomID = sorted(self.rooms.keys())[-1] + 1  # largest + 1
 
         print(f"\033[1;32mINFO:\t\033[0m  Instantiated {game} at {roomID}")
         inbox: asyncio.Queue[tuple[UUID, dict]] = asyncio.Queue()
