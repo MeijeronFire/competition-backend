@@ -17,7 +17,13 @@ _Connection = Union[Request, WebSocket]
 logger = logging.getLogger(__name__)
 
 
-def generateCsrf():
+def generateCsrf() -> str:
+    """
+    Generate a secure CSRF token.
+
+    Returns:
+        str: A URL-safe, cryptographically secure random token suitable for use as a CSRF token.
+    """
     return secrets.token_urlsafe(32)
 
 

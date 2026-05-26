@@ -18,7 +18,7 @@ async def initClient(ws: WebSocket) -> Client:
     return thisUser
 
 
-class Client():
+class Client:
     def __init__(self, ws: WebSocket):
         self.uuid = uuid4()
         self.userName = "FooBar"
@@ -71,7 +71,8 @@ class ConnectionMgr:
         async def send(ws: WebSocket):
             try:
                 print(
-                    f"connections.py: broadcasted to {self.connections[ws].userName}.")
+                    f"connections.py: broadcasted to {self.connections[ws].userName}."
+                )
                 await ws.send_json(msg)
             except Exception:
                 dead.append(ws)

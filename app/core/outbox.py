@@ -10,7 +10,12 @@ from uuid import UUID
 
 # example of our actor definition
 class AdminSender(Actor):
-    def __init__(self, adminQueue: asyncio.Queue[dict], cMgr: ConnectionMgr, supervisor: GameSupervisor):
+    def __init__(
+        self,
+        adminQueue: asyncio.Queue[dict],
+        cMgr: ConnectionMgr,
+        supervisor: GameSupervisor,
+    ):
         self.queue = adminQueue
         self._cMgr = cMgr
         self._admins = []

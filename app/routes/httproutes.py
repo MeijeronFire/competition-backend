@@ -29,12 +29,15 @@ async def home(request: Request):
 
     # logic if logged in
     request.session["csrf"] = generateCsrf()
-    return templates.TemplateResponse("home.html", {
-        "request": request,
-        "rooms": [state.rMgr.rooms[i] for i in state.rMgr.rooms.keys()],
-        "csrf": request.session["csrf"],
-        "gameNames": state.rMgr.games.keys()
-    })
+    return templates.TemplateResponse(
+        "home.html",
+        {
+            "request": request,
+            "rooms": [state.rMgr.rooms[i] for i in state.rMgr.rooms.keys()],
+            "csrf": request.session["csrf"],
+            "gameNames": state.rMgr.games.keys(),
+        },
+    )
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -45,11 +48,14 @@ async def login(request: Request):
     # now we have to find a way to actually log in
     # first we store the csrf token
     request.session["csrf"] = generateCsrf()
-    return templates.TemplateResponse("login.html", {
-        "request": request,
-        "csrf": request.session["csrf"],
-        "errors": request.session.get("errors")
-    })
+    return templates.TemplateResponse(
+        "login.html",
+        {
+            "request": request,
+            "csrf": request.session["csrf"],
+            "errors": request.session.get("errors"),
+        },
+    )
 
 
 @router.post("/login", response_class=HTMLResponse)
@@ -97,16 +103,16 @@ async def peek(request: Request, roomID: int):
     # logic if logged in
     # first we have to see if the room exists
     if roomID not in state.rMgr.rooms.keys():
-        return templates.TemplateResponse("page_not_found.html", {
-            "request": request,
-            "msg": "requested room ID does not exist."
-        })
+        return templates.TemplateResponse(
+            "page_not_found.html",
+            {"request": request, "msg": "requested room ID does not exist."},
+        )
     request.session["csrf"] = generateCsrf()
-    return templates.TemplateResponse("peek.html", {
-        "request": request,
-        "csrf": request.session["csrf"],
-        "roomID": roomID
-    })
+    return templates.TemplateResponse(
+        "peek.html",
+        {"request": request, "csrf": request.session["csrf"], "roomID": roomID},
+    )
+
 
 # to allow anyone to see the icon, not that important
 

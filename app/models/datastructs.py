@@ -1,9 +1,4 @@
-from app.core import (
-    RoomManager,
-    ConnectionMgr,
-    GameSupervisor,
-    Sender
-)
+from app.core import RoomManager, ConnectionMgr, GameSupervisor, Sender
 from app.core.outbox import AdminSender
 
 
