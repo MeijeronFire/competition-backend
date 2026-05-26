@@ -1,0 +1,30 @@
+site_name: Project Docs
+
+theme:
+  name: material
+
+nav:
+  - Home: index.md
+  - Meta: 00-meta.md
+  - Core: 01-core.md
+  - Prerequisites: 02-prerequisite-knowledge.md
+  - API: api.md
+
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: true
+            show_submodules: true
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true

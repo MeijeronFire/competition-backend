@@ -19,11 +19,20 @@ router = APIRouter()
 
 @router.websocket("/ws/dashboard")
 async def dashboard(ws: WebSocket):
+    """Admin dashboard websocket interface
+
+    This is a privileged endpoint, so if the user is not authenticated, the connection is broken.
+    Over this connection, we accept the following models:
+    -
+
+    Args:
+        ws (WebSocket): connection with client
+    """
     state = cast(StateModel, ws.app.state)
     # step 0: accept connection
     connectedUser = await initClient(ws)
 
-   # step 1: see if user is even allowed
+    # step 1: see if user is even allowed
     if not isAuthenticated(ws):
         await ws.close(1008)
         return
@@ -33,21 +42,25 @@ async def dashboard(ws: WebSocket):
     try:
         authMsg = DashRegMsg.model_validate(msg)
     except ValidationError:
-        await ws.send_json({
-            "type": "error",
-            "errorType": "Sent malformed authentication packet. "
-            'Expected {"csrf": [base64 token]} token, '
-            f"got {msg}"
-        })
+        await ws.send_json(
+            {
+                "type": "error",
+                "errorType": "Sent malformed authentication packet. "
+                'Expected {"csrf": [base64 token]} token, '
+                f"got {msg}",
+            }
+        )
         await ws.close()
         return
 
     # step 3: actually validate the csrf
     if not validateCsrf(ws, authMsg.csrf):
-        await ws.send_json({
-            "type": "error",
-            "errorType": f"Invalid session. Retry after reloading the page."
-        })
+        await ws.send_json(
+            {
+                "type": "error",
+                "errorType": f"Invalid session. Retry after reloading the page.",
+            }
+        )
         # policy violation, auth failure
         await ws.close(1008)
         return
@@ -88,28 +101,24 @@ async def websocket_endpoint(ws: WebSocket, roomID: int):
         regPacket = RegisterPacket.model_validate(msg)
     except ValidationError:
         # TODO: name is incorrect. Instantly find name of client when registering
-        print(
-            f"client {connectedUser} sent an incorrect JSON registration packet.")
+        print(f"client {connectedUser} sent an incorrect JSON registration packet.")
         # TODO: make this more verbose to explain which packet would be expected
         print(f"sending error to {ws.client}")
-        await ws.send_json({
-            "type": "error",
-            "errorType": "Incorrect JSON registration packet sent"
-        })
+        await ws.send_json(
+            {"type": "error", "errorType": "Incorrect JSON registration packet sent"}
+        )
         await ws.close()
         return
 
     # now we see if the specified room indeed exists
     try:
         room = state.rMgr.rooms[roomID]
-    except (KeyError, ValueError):
-        print(
-            f"client {connectedUser} sent an incorrect JSON registration packet.")
+    except KeyError, ValueError:
+        print(f"client {connectedUser} sent an incorrect JSON registration packet.")
         # TODO: make this more verbose to explain the room is incorrect
-        await ws.send_json({
-            "type": "error",
-            "errorType": "Incorrect JSON registration packet sent"
-        })
+        await ws.send_json(
+            {"type": "error", "errorType": "Incorrect JSON registration packet sent"}
+        )
         await ws.close()
         return
 
@@ -122,10 +131,7 @@ async def websocket_endpoint(ws: WebSocket, roomID: int):
         # which function to execute when the user receives a packet
 
         # we send a response to the user
-        await ws.send_json({
-            "type": "regResp",
-            "msg": "Registration OK."
-        })
+        await ws.send_json({"type": "regResp", "msg": "Registration OK."})
 
         # do this until the websocket disconnects unexpectedly
         while True:

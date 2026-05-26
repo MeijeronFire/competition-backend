@@ -13,11 +13,11 @@ from app.utils import log_async_error
 from random import randint
 
 
-class RoomManager():
+class RoomManager:
     def __init__(
         self,
         outbox: asyncio.Queue[tuple[UUID, dict]],
-        adminOutbox: asyncio.Queue[dict]
+        adminOutbox: asyncio.Queue[dict],
     ):
         self.rooms: dict[int, GameActor] = {}
         self.outbox = outbox
@@ -29,7 +29,7 @@ class RoomManager():
             "uber": Uber,
             "othello": Othello,
             "example": Example,
-            "testGame": TestGame
+            "testGame": TestGame,
         }
 
     async def create(self, game: str) -> int | None:
@@ -37,12 +37,13 @@ class RoomManager():
         if game not in self.games.keys():
             # maybe should be raise ?
             print(
-                f"\033[1;33mWARNING: \033[0m Provided game `{game}' does not exist!")
+                f"\033[1;33mWARNING: \033[0m Provided game `{game}' does not exist!"
+            )
             return
 
         # so run until there is a proper random number
         # while (roomID := randint(10000, 99999)) in self.rooms.keys():
-            # pass
+        # pass
         # TMP, for testing purposes
         roomID = 1
         if self.rooms.keys():
@@ -51,11 +52,7 @@ class RoomManager():
         print(f"\033[1;32mINFO:\t\033[0m  Instantiated {game} at {roomID}")
         inbox: asyncio.Queue[tuple[UUID, dict]] = asyncio.Queue()
         actor = GameActor(
-            self.games[game](),
-            roomID,
-            inbox,
-            self.outbox,
-            self.adminOutbox
+            self.games[game](), roomID, inbox, self.outbox, self.adminOutbox
         )
         self.rooms[roomID] = actor
         await actor.start()
@@ -68,8 +65,7 @@ class RoomManager():
             return
         await self.rooms[roomID].stop()
         self.rooms.pop(roomID)
-        print(
-            f"\033[1;32mINFO:\t\033[0m  Killed {toBeDel} at {roomID}")
+        print(f"\033[1;32mINFO:\t\033[0m  Killed {toBeDel} at {roomID}")
         # maybe call some sort of destructor on the object itself?
 
     # the "official" way to build the complete state

@@ -14,7 +14,7 @@ logging.basicConfig(
         "%(filename)s:%(lineno)d "
         "%(message)s"
     ),
-    datefmt="%H:%M:%S"
+    datefmt="%H:%M:%S",
 )
 
 
