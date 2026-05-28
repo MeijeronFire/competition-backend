@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
 
-from fastapi import APIRouter, Form, Request
+from fastapi import APIRouter, Form, Request, HTTPException
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, Response
 
 # for our HTTP routing
 from app.auth.session import isAuthenticated
@@ -23,6 +23,21 @@ templates = Jinja2Templates(directory="app/templates")
 # HTML endpoint
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request):
+    """Route for the home page
+
+    This route checks whether or not the user is logged in, and if so
+    returns the "home.html" jinja2 template (with some initial values
+    to make the JS rendering smoother, TODO)
+
+    Args:
+        request (Request): The request object describing the app and client
+
+    Returns:
+        Login (RedirectResponse):
+            Redirects to /login if not authenticated
+        Home (TemplateResponse):
+            Renders "home.html"
+    """
     state = cast(StateModel, request.app.state)
     if not isAuthenticated(request):
         return RedirectResponse(url=request.url_for("login"), status_code=303)
@@ -42,6 +57,16 @@ async def home(request: Request):
 
 @router.get("/login", response_class=HTMLResponse)
 async def login(request: Request):
+    """Route for the login page
+
+    Args:
+        request (Request): The request object describing the app and client
+
+    Returns:
+        Login (Response):
+            The login page containing the HTML together with a CSRF token and
+            errors if the user has made previous login attempts
+    """
     # if already logged in
     if isAuthenticated(request):
         return RedirectResponse(url=request.url_for("home"))
@@ -59,7 +84,34 @@ async def login(request: Request):
 
 
 @router.post("/login", response_class=HTMLResponse)
-async def loginForm(request: Request, data: Annotated[LoginForm, Form()]):
+async def loginForm(
+    request: Request, data: Annotated[LoginForm, Form()]
+) -> RedirectResponse:
+    """POST API endpoint for login attempts
+
+    Args:
+        request (Request): The request object describing the app and client
+        data (Annotated[LoginForm, Form): The form the user filled in
+
+    Returns:
+        Error (HTTPException):
+            If the user is already logged in, he should not be sending any message,
+            so a code 400 is raised and sent
+
+        Home (Redirect):
+            If the user provides correct credentials, matches the CSRF token,
+            and is not logged in, they are redirected to "home" and we remember
+            that the user is logged in.
+
+        Login (RedirectResponse):
+            If the user does not provide correct credentials, they are sent back to
+            home and we update the errors with the login attempt.
+    """
+    # we should not even consider this if the user is already logged in
+    if isAuthenticated(request):
+        # 303 code because we are on a POST endpoint
+        raise HTTPException(status_code=400, detail="Already logged in.")
+
     # first clear existing errors
     request.session["errors"] = None
     # first we check if the csrf tokens are correct
@@ -83,22 +135,49 @@ async def loginForm(request: Request, data: Annotated[LoginForm, Form()]):
 
 
 @router.post("/logout")
-def logout(request: Request, csrf: Annotated[str, Form()]):
+def logout(request: Request, csrf: Annotated[str, Form()]) -> RedirectResponse:
+    """POST API endpoint for logout attempts
+
+    Args:
+        request (Request): The request object describing the app and client
+        csrf (Annotated[str, Form): A hidden form containing the CSRF token
+
+    Returns:
+        Home (HTTPException):
+            If the user does not provide a valid CSRF token, we send back a 400 error
+        Login (RedirectResponse)
+            If the user provides the correct CSRF token, they are redirected to /login
+    """
     # if the CSRF token is incorrect -> untrusted request
     if not validateCsrf(request, csrf):
-        print("here")
-        return RedirectResponse(url=request.url_for("home"), status_code=303)
+        raise HTTPException(400, "CSRF token incorrect, operation not allowed.")
     # if it is correct -> we clear everything
-    print("here")
     request.session.clear()
     return RedirectResponse(url=request.url_for("login"), status_code=303)
 
 
 @router.get("/peek/{roomID}")
-async def peek(request: Request, roomID: int):
+async def peek(request: Request, roomID: int) -> Response:
+    """Route for peeking at rooms
+
+    Args:
+        request (Request): The request object describing the app and client
+        roomID (int): The ID of the room the user wants to view
+
+    Returns:
+        Login (RedirectResponse):
+            If the user is nog logged in, we rederict to login
+
+        Not found (TemplateResponse):
+            If the `roomID` is unknown, we respond with `page_not_found.html` and
+            tell the user that it does now exist
+
+        Peek (TemplateResponse):
+            If all is well, we send a GET response with the HTML of `peek.html`.
+    """
     state = cast(StateModel, request.app.state)
     if not isAuthenticated(request):
-        return RedirectResponse(url=request.url_for("login"), status_code=303)
+        return RedirectResponse(url=request.url_for("login"))
 
     # logic if logged in
     # first we have to see if the room exists
@@ -119,4 +198,11 @@ async def peek(request: Request, roomID: int):
 
 @router.get("/favicon.ico", include_in_schema=False)
 async def favicon():
+    """favicon
+
+    Using this explicit endpoint allows us to specify and acess the favicon anywhere.
+
+    Returns:
+        favicon (FileResponse): the favicon.ico file
+    """
     return FileResponse("static/favicon.ico")

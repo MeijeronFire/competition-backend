@@ -19,6 +19,24 @@ from app.utils import log_async_error
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """App lifespan
+
+    This is the lifecycle manager of the app. This is broadly used for initializing procceses
+    that are dependent on the existence of an app, i.e. extending the functionality and state.
+
+    Specifically here, we initialize the outbox, the room manager, the connection manager,
+    the supervisor, the sender and the admin sender.
+
+    If you wish to start up with some pre existing state, this would also be the place to do so.
+    When testing, it is common to start with something like:
+    ```
+    await supervisor._create({"name":"testGame"})
+    ```
+    Make sure to end all tasks started here as well.
+
+    Args:
+        app (FastAPI): The app to which the lifecycle pertains
+    """
     state = cast(StateModel, app.state)
     # set the maxsize to 100, s.t. if the handling is less than traffic,
     # we block allowing new msgs

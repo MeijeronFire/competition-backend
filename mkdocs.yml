@@ -2,10 +2,12 @@ site_name: Project Docs
 
 theme:
   name: material
+  features:
+    - content.code.annotate
+    - content.code.copy
 
 nav:
-  - Home: index.md
-  - Meta: 00-meta.md
+  - Home: 00-meta.md
   - Core: 01-core.md
   - Prerequisites: 02-prerequisite-knowledge.md
   - API: api.md
@@ -21,10 +23,14 @@ plugins:
             show_source: true
             show_root_heading: true
             show_root_full_path: true
+            show_root_toc_entry: false
             show_submodules: true
+            members_order: source
+            separate_signature: true
+            show_signature_annotations: true
 
 markdown_extensions:
-  - admonition
-  - codehilite
+  - pymdownx.highlight:
+      anchor_linenums: true
   - toc:
       permalink: true

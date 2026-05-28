@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
 
+from json import JSONDecodeError
+
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.core.connections import initClient
 from game.gameActor import GameActor
-from app.models.verify import RegisterPacket, DashRegMsg
+from app.models.verify import GameRegisterMsg, DashRegMsg
 from app.models.datastructs import StateModel
 from app.auth.session import isAuthenticated
 from app.auth.crypt import validateCsrf
@@ -21,12 +23,23 @@ router = APIRouter()
 async def dashboard(ws: WebSocket):
     """Admin dashboard websocket interface
 
-    This is a privileged endpoint, so if the user is not authenticated, the connection is broken.
-    Over this connection, we accept the following models:
-    -
+    This is a privileged endpoint, so if the user is not authenticated, the
+    connection is broken. It is also CSRF protected, so the first packet must
+    be a pydantic `DashRegMsg`.
+
+    Forwarding:
+        After verification, all incoming messages are
+        forwarded like here:
+        `Supervisor.parse(msg["action"], msg["data"])`
+        If either of these arguments are not present, the message is ignored.
 
     Args:
         ws (WebSocket): connection with client
+
+    Returns:
+        Error (JSON): A malformed `DashRegMsg` packet was sent
+        Error (JSON): The CSRF token did not match
+        None (None): The websocket connection closed
     """
     state = cast(StateModel, ws.app.state)
     # step 0: accept connection
@@ -89,6 +102,38 @@ async def dashboard(ws: WebSocket):
 
 @router.websocket("/ws/{roomID}")
 async def websocket_endpoint(ws: WebSocket, roomID: int):
+    """Room websocket connection endpoint
+
+    This function serves as the primary interface for players connected to
+    the server. Tht means that it is responsible for verification,
+    registration, object construction, appending the player to other objects
+    (and deleting them afterward) and of course handling incoming messages.
+
+    This implies that our registration protocol for games is implemented in the
+    below function. The code is not too obtuse, so for a more detailed view
+    of how the registration protocol works, reading the source is reccomended.
+
+    To seperate responsibility just a little bit, it does _not_ do any
+    preprocessing for incoming messages. That means other code is responsible
+    for handling issues like XSS protection or malformed JSON.
+
+    Forwarding:
+        After verification, all incoming messages are
+        forwarded like here:
+        `Supervisor.parse(msg["action"], msg["data"])`
+        If either of these arguments are not present, the message is ignored.
+
+
+    Args:
+        ws (WebSocket): WebSocket connection with the client
+        roomID (int): ID of the room the client wants to connect to
+
+    Returns:
+        Error (JSON): A malformed `GameRegisterMsg` msg was sent
+        Error (JSON): The provided `roomID` does not exist
+        None (None): The websocket connection closed
+
+    """
     state = cast(StateModel, ws.app.state)
     # after this point, never access the websocket object directly
     connectedUser = await initClient(ws)
@@ -98,7 +143,7 @@ async def websocket_endpoint(ws: WebSocket, roomID: int):
     msg = await connectedUser.ws.receive_json()
 
     try:
-        regPacket = RegisterPacket.model_validate(msg)
+        regPacket = GameRegisterMsg.model_validate(msg)
     except ValidationError:
         # TODO: name is incorrect. Instantly find name of client when registering
         print(f"client {connectedUser} sent an incorrect JSON registration packet.")
@@ -135,7 +180,10 @@ async def websocket_endpoint(ws: WebSocket, roomID: int):
 
         # do this until the websocket disconnects unexpectedly
         while True:
-            data = await ws.receive_json()
+            try:
+                data = await ws.receive_json()
+            except JSONDecodeError:
+                continue
             # print(f"We got data: {data}")
             await room.inbox.put((connectedUser.uuid, data))
     except WebSocketDisconnect:
