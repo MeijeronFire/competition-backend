@@ -19,6 +19,15 @@ logging.basicConfig(
 
 
 def log_async_error(task: asyncio.Task):
+    """Log async errors
+
+    This quick function logs all errors spawning from async tasks.
+    It is common for task errors to be surpressed, but by adding
+    this function as callback, any errors are shown.
+
+    Args:
+        task (asyncio.Task): The relevant asyncio task
+    """
     try:
         task.result()
     except asyncio.CancelledError:
