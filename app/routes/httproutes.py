@@ -27,7 +27,7 @@ async def home(request: Request):
 
     This route checks whether or not the user is logged in, and if so
     returns the "home.html" jinja2 template (with some initial values
-    to make the JS rendering smoother, TODO)
+    to make the JS rendering smoother)
 
     Args:
         request (Request): The request object describing the app and client
