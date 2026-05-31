@@ -217,4 +217,4 @@ key.pem
 cert.pem
 
 # the bootstrap css and html
-static/bootstrap/
+app/static/vendor
