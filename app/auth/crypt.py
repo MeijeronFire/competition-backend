@@ -27,26 +27,32 @@ def generateCsrf() -> str:
     return secrets.token_urlsafe(32)
 
 
-def validateCsrf(connection: _Connection, csrf_token: str) -> bool:
+def validateCsrf(connection: _Connection, manualToken: str | None = None) -> bool:
     """validate CSRF token
 
-    This simple function looks at a request sent by a user and verifies if it matches
-    with the token provided in `csrf_token`. If so, True is returned, if not, False.
+    This function looks at a request sent by a user and verifies if it matches
+    with the token set by the server.
+
+    It either compares the provided string with the known token, or looks at the
+    http header for a token. If both are provided, manualToken is checked.
 
     Args:
         connection (Union[Request, WebSocket]):
-            Type to allow function to handle .seesion.get("csrf") for both websocket
-            and HTTP requests.
-        csrf_token (str):
+            Stores true token and http header. Typed to allow function to handle
+            .session.get("csrf") for both websocket and HTTP requests.
+        manualToken (str):
             The token for the request to be validated against
 
     Returns:
         bool: Whether or not the request matches with the CSRF token provided
     """
-    csrf = connection.session.get("csrf")
-    if not csrf or csrf != csrf_token:
-        return False
-    return True
+    providedToken = (
+        manualToken
+        if manualToken is not None
+        else connection.headers.get("X-CSRF-Token")
+    )
+    trueToken = connection.session.get("csrf")
+    return providedToken == trueToken
 
 
 # lookup if a user is in the csv file

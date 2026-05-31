@@ -5,3 +5,4 @@ Global TODO:
 - fix poor naming
 - correctly identify all private and public attributes and methods
 - update readme & install instructions to reflect UV install
+- prerender JS for better speed
