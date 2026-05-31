@@ -221,4 +221,3 @@ cert.pem
 app/static/vendor/
 =======
 app/static/vendor
->>>>>>> c2a7d86 (made bootstrap reliant on CDN's)
