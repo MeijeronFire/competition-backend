@@ -1,4 +1,4 @@
-site_name: Project Docs
+site_name: Competition Backend
 
 theme:
   name: material
@@ -10,7 +10,7 @@ nav:
   - Home: 00-meta.md
   - Core: 01-core.md
   - Prerequisites: 02-prerequisite-knowledge.md
-  - API: api.md
+  - API: 50-source-reference/01-top.md
 
 
 plugins:
@@ -23,7 +23,7 @@ plugins:
             show_source: true
             show_root_heading: true
             show_root_full_path: true
-            show_root_toc_entry: false
+            show_root_toc_entry: true
             show_submodules: true
             members_order: source
             separate_signature: true
