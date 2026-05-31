@@ -12,6 +12,8 @@ html#a-conceptual-overview-of-asyncio)
 
 - [websockets](https://en.wikipedia.org/wiki/WebSocket) (only surface-level knoweledge is required)
 
+- [SSE](https://en.wikipedia.org/wiki/Server-sent_events) For our admin dashboard, we use Server Sent Events.
+
 - [jinja2 templating](https://jinja.palletsprojects.com/en/stable/templates/) (only surface-level 
 knoweledge is required)
 

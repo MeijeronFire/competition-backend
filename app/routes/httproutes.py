@@ -91,7 +91,7 @@ async def loginForm(
 
     Args:
         request (Request): The request object describing the app and client
-        data (Annotated[LoginForm, Form): The form the user filled in
+        data (Annotated[LoginForm, Form]): The form the user filled in
 
     Returns:
         Error (HTTPException):
