@@ -25,6 +25,26 @@
 
 <div class="container">
     <div class="row" id="card-container">
+        {# where client side JS takes over in the end #}
+        {% for cardJSON in cards %}
+        <div class="col-3" id="{{ cardJSON['id'] }}">
+            <div class="card border-{{ cardJSON['borderType'] }} mb-3">
+                <div class="card-header">
+                    {{ cardJSON["playerNr"] }}/{{ cardJSON["minPlayers"] }}
+                    {% for badge in cardJSON["roomState"] %}
+                    <span class="badge rounded-pill bg-{{ badge['type'] }}">{{ badge["msg"] }}</span>
+                    {% endfor %}
+                </div>
+                <button class="btn-close position-absolute top-0 end-0 card-close"
+                    id="btn-{{ cardJSON['id'] }}"></button>
+                <div class="card-body">
+                    <h4 class="card-title">{{ cardJSON["title"] }}</h4>
+                    <p class="card-text">{{ cardJSON["description"]|safe }}</p>
+                    <a href="/peek/{{ cardJSON['id'] }}" class="btn btn-secondary w-100">Peek</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
         <!-- in here, the JS places cards -->
     </div>
 </div>

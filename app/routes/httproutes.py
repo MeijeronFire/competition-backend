@@ -48,7 +48,7 @@ async def home(request: Request):
         "home.html",
         {
             "request": request,
-            "rooms": [state.rMgr.rooms[i] for i in state.rMgr.rooms.keys()],
+            "cards": state.rMgr.buildState().values(),
             "csrf": request.session["csrf"],
             "gameNames": state.rMgr.games.keys(),
         },
