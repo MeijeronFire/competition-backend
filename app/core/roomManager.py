@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Otto Crawford
 
 import asyncio
+from typing import Any
 from uuid import UUID
 
 from game import GameActor
@@ -17,7 +18,7 @@ class RoomManager:
     def __init__(
         self,
         outbox: asyncio.Queue[tuple[UUID, dict]],
-        adminOutbox: asyncio.Queue[dict],
+        adminOutbox: asyncio.Queue[tuple[str, dict[str, Any]]],
     ):
         self.rooms: dict[int, GameActor] = {}
         self.outbox = outbox

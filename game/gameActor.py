@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Otto Crawford
 
 import asyncio
-from typing import AsyncIterable
+from typing import Any, AsyncIterable
 
 from platformdirs.android import _android_documents_folder
 from app.core import roomManager
@@ -12,14 +12,14 @@ from uuid import UUID
 import random
 
 
-class GameActor():
+class GameActor:
     def __init__(
         self,
         game: Game,
         id: int,
         inbox: asyncio.Queue[tuple[UUID, dict]],
         outbox: asyncio.Queue[tuple[UUID, dict]],
-        adminOutbox: asyncio.Queue[dict]
+        adminOutbox: asyncio.Queue[tuple[str, dict[str, Any]]],
     ):
         self.game = game
         self.inbox = inbox
@@ -27,16 +27,22 @@ class GameActor():
         self.adminOutbox = adminOutbox
         self.renewStateEvent = game.renewStateEvent
         self.id = id
-        self.borderType = getattr(self.game, "borderType", random.choice([
-            "primary",
-            "secondary",
-            "success",
-            "danger",
-            "warning",
-            "info",
-            "light",
-            "dark"
-        ]))
+        self.borderType = getattr(
+            self.game,
+            "borderType",
+            random.choice(
+                [
+                    "primary",
+                    "secondary",
+                    "success",
+                    "danger",
+                    "warning",
+                    "info",
+                    "light",
+                    "dark",
+                ]
+            ),
+        )
         self._ioTask: asyncio.Task[None | None] | None = None
         self._adminTask: asyncio.Task[None | None] | None = None
         # we want to make sure that the game can not be joined on init,
@@ -73,23 +79,14 @@ class GameActor():
 
         # (empty)
         if len(self.game.UUIDs) == 0:
-            badges.append({
-                "type": "danger",
-                "msg": "empty"
-            })
+            badges.append({"type": "danger", "msg": "empty"})
 
         # (closed)
         if self.game.closed:
-            badges.append({
-                "type": "warning",
-                "msg": "closed"
-            })
+            badges.append({"type": "warning", "msg": "closed"})
         # (open)
         else:
-            badges.append({
-                "type": "primary",
-                "msg": "open"
-            })
+            badges.append({"type": "primary", "msg": "open"})
         return badges
 
     def toState(self):
@@ -101,17 +98,16 @@ class GameActor():
             "gameState": self.game.getState(),
             "description": self.game.description,
             "borderType": self.borderType,
-            "roomState": self._genBadges()
+            "roomState": self._genBadges(),
         }
 
     async def adminEvents(self):
         while True:
             # wait for us to have to resend a packet
             await self.renewStateEvent.wait()
-            await self.adminOutbox.put({
-                "type": "update",
-                "data": self.toState()
-            })
+            await self.adminOutbox.put(
+                ("dashboard", {"type": "update", "data": self.toState()})
+            )
             self.renewStateEvent.clear()
 
     async def runIo(self):
@@ -128,12 +124,9 @@ class GameActor():
             # the client object who's turn it is
             sentTo = self.game.turnUUID()
             # tell client it is his turn
-            await self.outbox.put((
-                sentTo, {
-                    "type": "turn",
-                    "state": self.game.genericState
-                }
-            ))
+            await self.outbox.put(
+                (sentTo, {"type": "turn", "state": self.game.genericState})
+            )
             while True:
                 while True:
                     # until we get the message we want
