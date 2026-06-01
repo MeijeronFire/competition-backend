@@ -7,4 +7,7 @@
     "files.associations": {
         "*.html": "jinja-html"
     },
+    "[jinja-html]": {
+        "editor.formatOnSave": false
+    }
 }

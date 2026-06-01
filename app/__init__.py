@@ -25,6 +25,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 _SECRET_KEY = "dev-key"
 # DANGEROUS DANGEROUS DANGEROUS #
 #################################
+
 app.add_middleware(
     SessionMiddleware,
     secret_key=_SECRET_KEY,

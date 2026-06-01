@@ -76,7 +76,7 @@ async def lifespan(app: FastAPI):
     yield
 
     await sender.stop()
-    await adminSender.start()
+    await adminStream.start()
     # we don't really care about stopping all games, since no states persist
 
     # if gameSupervisorTask:

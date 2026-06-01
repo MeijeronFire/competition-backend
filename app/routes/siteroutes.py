@@ -48,7 +48,7 @@ async def home(request: Request):
         "home.html",
         {
             "request": request,
-            "cards": state.rMgr.buildState().values(),
+            "cards": state.rMgr.buildState(),
             "csrf": request.session["csrf"],
             "gameNames": state.rMgr.games.keys(),
         },

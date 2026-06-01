@@ -54,7 +54,8 @@ class AdminStream(Actor):
             data = msg[1]
 
             # send it to all relevant clients
-            await asyncio.gather(*(q.put(data) for q in outGoingQueues))
+            for q in outGoingQueues:
+                asyncio.create_task(q.put(data))
 
             # mark as done, repeat
             self.queueIn.task_done()
