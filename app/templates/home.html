@@ -3,16 +3,24 @@
 {% block content%}
 
 <div class="d-flex">
+
     <div class="me-auto">
         <h3>Room overview</h3>
     </div>
+    
     <div class="dropdown">
-        <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-            Create game</button>
-        <ul class="dropdown-menu">
+        <button class="btn btn-primary dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown">
+            Create game
+        </button>
+        
+        <ul class="dropdown-menu" x-data>
             {% for name in gameNames %}
             <li>
-                <a class="dropdown-item ws-option" href="#" data-name="{{ name }}">
+                <a class="dropdown-item ws-option"
+                   href="#"
+                   @click="createGame('{{ name }}')">
                     {{ name}}
                 </a>
             </li>
@@ -25,45 +33,44 @@
 
 <div class="container">
 
-    <div class="row">
-        <div x-data>
-            <template x-for="cardJSON in $store.cards.items" :key="cardJSON.id">
+    <div class="row" x-data>
+        <template x-for="cardJSON in Object.values($store.cards)" :key="cardJSON.id">
 
-                <div class="col-3" :id="cardJSON.id">
+            <div class="col-3" :id="cardJSON.id">
 
-                    <div class="card mb-3" :class="'border-' + cardJSON.borderType">
+                <div class="card mb-3" :class="'border-' + cardJSON.borderType">
 
-                        {# title of the card #}
-                        <div class="card-header">
-                            {# how many players are connected #}
-                            <span x-text="cardJSON.playerNr + '/' + cardJSON.minPlayers"></span>
+                    {# title of the card #}
+                    <div class="card-header">
+                        {# how many players are connected #}
+                        <span x-text="cardJSON.playerNr + '/' + cardJSON.minPlayers"></span>
 
-                            {# the badges next to the title #}
-                            <template x-for="badge in cardJSON.roomState">
-                                <span class="badge rounded-pill"
-                                      x-text="badge.msg"
-                                      :class="'bg-' + badge.type"></span>
-                            </template>
-                        </div>
-
-                        {# killing the game #}
-                        <button class="btn-close position-absolute top-0 end-0 card-close"
-                                :id="'btn-' + cardJSON.id"></button>
-
-                        {# card body #}
-                        <div class="card-body">
-                            {# title #}
-                            <h4 class="card-title" x-text="cardJSON.title"></h4>
-                            {# text #}
-                            <p class="card-text" x-html="cardJSON.description"></p>
-                            {# peek link #}
-                            <a :href="'/peek/' + cardJSON.id" class="btn btn-secondary w-100">Peek</a>
-                        </div>
-
+                        {# the badges next to the title #}
+                        <template x-for="badge in cardJSON.roomState">
+                            <span class="badge rounded-pill"
+                                    x-text="badge.msg"
+                                    :class="'bg-' + badge.type"></span>
+                        </template>
                     </div>
+
+                    {# killing the game #}
+                    <button class="btn-close position-absolute top-0 end-0 card-close"
+                            :id="'btn-' + cardJSON.id"
+                            @click="rmGame(cardJSON.id)"></button>
+
+                    {# card body #}
+                    <div class="card-body">
+                        {# title #}
+                        <h4 class="card-title" x-text="cardJSON.title"></h4>
+                        {# text #}
+                        <p class="card-text" x-html="cardJSON.description"></p>
+                        {# peek link #}
+                        <a :href="'/peek/' + cardJSON.id" class="btn btn-secondary w-100">Peek</a>
+                    </div>
+
                 </div>
-            </template>
-        </div>
+            </div>
+        </template>
     </div>
 </div>
 

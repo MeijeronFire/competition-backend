@@ -69,7 +69,7 @@ async def lifespan(app: FastAPI):
     app.state.adminStream = adminStream
     await adminStream.start()
 
-    await supervisor._create({"name": "testGame"})
+    await supervisor.create("testGame")
 
     app.state.users = 0
 

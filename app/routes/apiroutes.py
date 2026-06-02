@@ -1,13 +1,14 @@
-from typing import Annotated
+from typing import Annotated, cast
 
-from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi import APIRouter, Form, HTTPException, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
 from app.auth.crypt import isUser, validateCsrf, validatePassword
 from app.auth.session import isAuthenticated
 
 # form validation
-from app.models.verify import LoginForm
+from app.models.datastructs import StateModel
+from app.models.verify import DashCreateMsg, DashDeleteMsg, LoginForm
 
 router = APIRouter()
 
@@ -83,6 +84,62 @@ def logout(request: Request, csrf: Annotated[str, Form()]) -> RedirectResponse:
     # if it is correct -> we clear everything
     request.session.clear()
     return RedirectResponse(url=request.url_for("login"), status_code=303)
+
+
+@router.post("/api/room/delRoom")
+async def delroom(request: Request, msg: DashDeleteMsg):
+    """POST API endpoint for requesting the deletion of a room
+
+    Args:
+        request (Request): The request object describing the app and client
+
+    Returns:
+        400: HTTPException if CSRF token is incorrect
+        401: HTTPException if user is not authenticated
+    """
+    state = cast(StateModel, request.app.state)
+
+    if not isAuthenticated(request):
+        raise HTTPException(401, "Not authenticated. Operation not permitted.")
+
+    if not validateCsrf(request):
+        raise HTTPException(400, "CSRF token incorrect, operation not allowed.")
+
+    if msg.roomID not in state.rMgr.rooms:
+        raise HTTPException(404, "Requested room does not exist.")
+
+    # so we are allowed to do it
+    await state.supervisor.delete(msg.roomID)
+
+    return Response(status_code=200)
+
+
+@router.post("/api/room/createRoom")
+async def createRoom(request: Request, msg: DashCreateMsg):
+    """POST API endpoint for requesting the creation of a room
+
+    Args:
+        request (Request): The request object describing the app and client
+
+    Returns:
+        400: HTTPException if CSRF token is incorrect
+        401: HTTPException if user is not authenticated
+    """
+    state = cast(StateModel, request.app.state)
+
+    if not isAuthenticated(request):
+        raise HTTPException(401, "Not authenticated. Operation not permitted.")
+
+    if not validateCsrf(request):
+        raise HTTPException(400, "CSRF token incorrect, operation not allowed.")
+
+    if msg.gameName not in state.rMgr.games:
+        raise HTTPException(404, "Requested game does not exist.")
+
+    # so we are allowed to do it
+    await state.supervisor.create(msg.gameName)
+
+    return Response(status_code=200)
 
 
 # to allow anyone to see the icon, not that important

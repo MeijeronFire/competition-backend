@@ -32,19 +32,15 @@ class GameSupervisor:
         # logger.info(f"{state} with hash {computeJSONHash(state)}")
         return computeJSONHash(state)
 
-    async def _create(self, data: dict[str, str]) -> None:
+    async def create(self, gameName: str) -> None:
         """
         On a create request, we tell the room manager to create a
         room of a type specified in the request
         """
-        try:
-            msg = DashCreateMsg.model_validate(data)
-        except ValidationError:
-            return
 
-        roomID = await self._rMgr.create(msg.name)
+        roomID = await self._rMgr.create(gameName)
         if roomID is None:
-            return  # do some better error handling here
+            return  # TODO: do some better error handling here
 
         await self._adminOutbox.put(
             (
@@ -67,16 +63,11 @@ class GameSupervisor:
         except ValidationError:
             return
 
-    async def _delete(self, data: dict[str, int]) -> None:
+    async def delete(self, roomID: int) -> None:
         """
         On a delete request, we gracefully handle the deletion
         of all objects. We choose the room by the room_id
         """
-        try:
-            msg = DashDeleteMsg.model_validate(data)
-        except ValidationError:
-            return
-        roomID = msg.roomID
         await self._rMgr.delete(roomID)
         # and inform users of the delete
         await self._adminOutbox.put(
@@ -139,12 +130,8 @@ class GameSupervisor:
     async def parse(self, action: str, msg: dict):
         # implementation of our simple CRUD interface
         match action:
-            case "create":
-                await self._create(msg)
             case "update":
                 self._update(msg)
-            case "delete":
-                await self._delete(msg)
             case "getState":
                 await self._getState(msg)
             case "getRoomState":
