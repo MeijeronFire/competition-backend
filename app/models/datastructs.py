@@ -1,5 +1,5 @@
 from app.core import RoomManager, ConnectionMgr, GameSupervisor, Sender
-from app.core.outbox import AdminSender
+from app.core.outbox import AdminStream
 
 
 class StateModel:
@@ -13,4 +13,5 @@ class StateModel:
     cMgr: ConnectionMgr
     supervisor: GameSupervisor
     sender: Sender
-    adminSender: AdminSender
+    adminStream: AdminStream
+    running: bool

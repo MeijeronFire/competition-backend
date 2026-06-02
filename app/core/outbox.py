@@ -1,43 +1,64 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
 
+import logging
+from typing import Any
+
+from griffe import DocstringSectionAttributes
+
 from app.models.primitives import Actor
 from app.core.connections import ConnectionMgr, Client
 from app.core.supervisor import GameSupervisor
 import asyncio
 from uuid import UUID
 
+logger = logging.getLogger(__name__)
+
 
 # example of our actor definition
-class AdminSender(Actor):
+class AdminStream(Actor):
     def __init__(
         self,
-        adminQueue: asyncio.Queue[dict],
-        cMgr: ConnectionMgr,
+        adminQueue: asyncio.Queue[tuple[str, dict[str, Any]]],
         supervisor: GameSupervisor,
     ):
-        self.queue = adminQueue
-        self._cMgr = cMgr
-        self._admins = []
+        self.queueIn = adminQueue
+        self._outQueues: dict[str, list[asyncio.Queue[dict[str, Any]]]] = {}
         self._supervisor = supervisor
 
-    def addAdmin(self, client: Client):
-        self._admins.append(client)
+    def addAdmin(
+        self, destination: str, queue: asyncio.Queue[dict[str, Any]]
+    ) -> None:
+        if destination not in self._outQueues:
+            self._outQueues[destination] = []
+        self._outQueues[destination].append(queue)
 
-    def popAdmin(self, client: Client):
-        self._admins.remove(client)
+    def popAdmin(
+        self, destination: str, queue: asyncio.Queue[dict[str, Any]]
+    ) -> None:
+        self._outQueues[destination].remove(queue)
 
     async def _read(self):
         while True:
             # wait for something to send
-            msg = await self.queue.get()
-            # send it & wrap it in a proper hash
-            for admin in self._admins:
-                await admin.ws.send_json(msg)
-                # await admin.ws.send_json({**msg, "stateHash": self._supervisor.generateStateHash()})
+            msg = await self.queueIn.get()
+
+            # first argument is destination
+            destination = msg[0]
+            if destination not in self._outQueues:
+                logger.info("Destination not yet known")
+                continue
+            outGoingQueues = self._outQueues[destination]
+
+            # second argument is content
+            data = msg[1]
+
+            # send it to all relevant clients
+            for q in outGoingQueues:
+                asyncio.create_task(q.put(data))
 
             # mark as done, repeat
-            self.queue.task_done()
+            self.queueIn.task_done()
 
 
 class Sender(Actor):

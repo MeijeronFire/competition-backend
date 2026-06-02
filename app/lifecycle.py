@@ -5,13 +5,14 @@ from contextlib import asynccontextmanager
 import asyncio
 import traceback
 from fastapi import FastAPI
-from typing import cast
+from typing import Any, cast
 from uuid import UUID
+import signal
 
 from app.core import ConnectionMgr
 from app.core import RoomManager
 from app.core import Sender
-from app.core import AdminSender
+from app.core import AdminStream
 from app.core import GameSupervisor
 from app.models.datastructs import StateModel
 from app.utils import log_async_error
@@ -42,7 +43,9 @@ async def lifespan(app: FastAPI):
     # we block allowing new msgs
     # inbox: asyncio.Queue[Tuple[Client, Dict]] = asyncio.Queue(maxsize = 100)
     outbox: asyncio.Queue[tuple[UUID, dict]] = asyncio.Queue(maxsize=100)
-    adminOutbox: asyncio.Queue[dict] = asyncio.Queue(maxsize=100)
+    adminOutbox: asyncio.Queue[tuple[str, dict[str, Any]]] = asyncio.Queue(
+        maxsize=100
+    )
 
     app.state.outbox = outbox
     app.state.outbox = adminOutbox
@@ -62,16 +65,18 @@ async def lifespan(app: FastAPI):
     await sender.start()
 
     # Also instantiate the admin sender postoffice!
-    adminSender = AdminSender(adminOutbox, cMgr, supervisor)
-    app.state.adminSender = adminSender
-    await adminSender.start()
+    adminStream = AdminStream(adminOutbox, supervisor)
+    app.state.adminStream = adminStream
+    await adminStream.start()
 
-    await supervisor._create({"name": "testGame"})
+    await supervisor.create("testGame")
+
+    app.state.users = 0
 
     yield
 
     await sender.stop()
-    await adminSender.start()
+    await adminStream.start()
     # we don't really care about stopping all games, since no states persist
 
     # if gameSupervisorTask:

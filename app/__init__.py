@@ -4,7 +4,7 @@
 import sys
 import os
 from fastapi import FastAPI
-from app.routes import wsroutes, httproutes
+from app.routes import siteroutes, wsroutes, sseroutes, apiroutes
 from fastapi.staticfiles import StaticFiles
 from typing import cast
 
@@ -25,6 +25,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 _SECRET_KEY = "dev-key"
 # DANGEROUS DANGEROUS DANGEROUS #
 #################################
+
 app.add_middleware(
     SessionMiddleware,
     secret_key=_SECRET_KEY,
@@ -39,7 +40,9 @@ if _SECRET_KEY in ["dev-key", "test", "foo", "bar", "foobar"]:
 
 # include everything in router/
 app.include_router(wsroutes.router)
-app.include_router(httproutes.router)
+app.include_router(siteroutes.router)
+app.include_router(sseroutes.router)
+app.include_router(apiroutes.router)
 
 
 # Detect if we are running with reload enabled

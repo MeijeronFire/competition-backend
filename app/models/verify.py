@@ -71,7 +71,7 @@ class DashCreateMsg(BaseModel):
         BaseModel (BaseModel): Inheritance
     """
 
-    name: str
+    gameName: str
 
 
 class DashUpdateMsg(BaseModel):
