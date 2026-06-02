@@ -2,8 +2,6 @@
 # Copyright (C) 2026 Otto Crawford
 from app.models.primitives import Actor
 from app.models.verify import (
-    DashCreateMsg,
-    DashDeleteMsg,
     DashGetRoomStateMsg,
     DashUpdateMsg,
 )

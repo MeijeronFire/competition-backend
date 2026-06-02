@@ -1,20 +1,8 @@
+// SPDX - License - Identifier: GPL - 3.0 - or - later
+// Copyright(C) 2026 Otto Crawford
+
 // I HATE VANILLA JS. WHY IS THERE NO NORMAL DOM MANIPULATION?
-
-// patched version of fetch to include CSRF token
-function csrfFetch(url, options = {}) {
-    const method = (options.method || "GET").toUpperCase();
-
-    const headers = new Headers(options.headers || {});
-
-    if (method === "POST") {
-        headers.set("X-CSRF-Token", window.CSRF_TOKEN);
-    }
-
-    return fetch(url, {
-        ...options,
-        headers
-    });
-}
+// thank god for alpine
 
 document.addEventListener('alpine:init', () => {
     Alpine.store('cards', {
@@ -37,7 +25,6 @@ events.onmessage = (event) => {
         return;
     }
 
-    console.log(msg)
     switch (msg.type) {
         case "update":
             let updateCard = msg.data
@@ -56,14 +43,14 @@ events.onmessage = (event) => {
 };
 
 // functions to handle dashboard actions
-function rmGame(cardID) {
+async function rmGame(cardID) {
     if (!(cardID in Alpine.store('cards'))) {
         throw ("Card ID provided that does not exist");
         return;
     }
     // now we know the ID is valid
     console.log(`requested deletion at ${cardID}`)
-    csrfFetch("/api/room/delRoom", {
+    const resp = await csrfFetch("/api/room/delRoom", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -72,9 +59,12 @@ function rmGame(cardID) {
             roomID: cardID
         })
     });
+    if (!resp.ok) {
+        warn("reloading the page will probably fix the issue. If not, contact maintainer.", "Invalid request")
+    }
 }
 
-function createGame(gameName) {
+async function createGame(gameName) {
     console.log(`requested new game name ${gameName}`)
     csrfFetch("/api/room/createRoom", {
         method: "POST",

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Otto Crawford
+
 from typing import Annotated, cast
 
 from fastapi import APIRouter, Form, HTTPException, Request, Response

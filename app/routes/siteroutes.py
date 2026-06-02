@@ -116,5 +116,21 @@ async def peek(request: Request, roomID: int) -> Response:
     request.session["csrf"] = generateCsrf()
     return templates.TemplateResponse(
         "peek.html",
-        {"request": request, "csrf": request.session["csrf"], "roomID": roomID},
+        {
+            "request": request,
+            "csrf": request.session["csrf"],
+            "roomID": roomID,
+            "initialJSON": dict(
+                [
+                    (
+                        str(uuid),
+                        {
+                            "name": state.rMgr.rooms[roomID].game.playerNames[uuid],
+                            "UUID": str(uuid),
+                        },
+                    )
+                    for uuid in state.rMgr.rooms[roomID].game.UUIDs
+                ]
+            ),
+        },
     )
