@@ -2,14 +2,16 @@
 # Copyright (C) 2026 Otto Crawford
 
 import asyncio
-from typing import Any, AsyncIterable
+import logging
+from typing import Any, Literal
 
-from platformdirs.android import _android_documents_folder
 from app.core import roomManager
 from app.utils import log_async_error
 from game.models import Game
 from uuid import UUID
 import random
+
+logger = logging.getLogger(__name__)
 
 
 class GameActor:
@@ -43,11 +45,12 @@ class GameActor:
                 ]
             ),
         )
-        self._ioTask: asyncio.Task[None | None] | None = None
-        self._adminTask: asyncio.Task[None | None] | None = None
+        self._ioTask: asyncio.Task[None] | None = None
+        self._adminTask: asyncio.Task[None] | None = None
+        self._gameTask: asyncio.Task[None] | None = None
         # we want to make sure that the game can not be joined on init,
         # so we enforce an initial closed state
-        self.game.closed = True
+        self.game.roomState = "closed"
 
     async def start(self) -> None:
         # init general message io
@@ -72,24 +75,30 @@ class GameActor:
             except asyncio.CancelledError:
                 pass
 
+        self.game.stop()
+        logger.info(f"killed game {self.game.name}, id: {self.id}")
+
     # generate the badges displayed on the dashboard
-    def _genBadges(self):
-        # add arbitrary elements from the gameclass
-        badges = [] + getattr(self.game, "roomState", [])
+    def _genBadges(self) -> list[dict[str, str]]:
+        # add elements from the gameclass
+        badges = []
 
         # (empty)
         if len(self.game.UUIDs) == 0:
             badges.append({"type": "danger", "msg": "empty"})
 
-        # (closed)
-        if self.game.closed:
+        if self.game.roomState == "open":
+            badges.append({"type": "info", "msg": "open"})
+        elif self.game.roomState == "closed":
             badges.append({"type": "warning", "msg": "closed"})
-        # (open)
-        else:
-            badges.append({"type": "primary", "msg": "open"})
+        elif self.game.roomState == "running":
+            badges.append({"type": "secondary", "msg": "running"})
+        elif self.game.roomState == "stopped":
+            badges.append({"type": "warning", "msg": "stopped"})
+
         return badges
 
-    def toState(self):
+    def toState(self) -> dict[str, Any]:
         return {
             "playerNr": len(self.game.UUIDs),
             "minPlayers": self.game.minPlayers,
@@ -100,6 +109,34 @@ class GameActor:
             "borderType": self.borderType,
             "roomState": self._genBadges(),
         }
+
+    def setGame(self, operation: Literal["start", "stop", "open", "close"]) -> None:
+        # we need to tell both the dashboard and the game that we
+        # have changed the state
+
+        # NOTE: if the queue is full, we drop it, so we don't add it.
+        # We assume that the next load will include the state. That means
+        # that it is the resonsibility of the rest of the code to include its state
+
+        # note: if I would hate myself, I would say:
+        # eval(f"self.game.{operation}()")
+        match operation:
+            case "start":
+                self.game.start()
+            case "stop":
+                self.game.stop()
+            case "close":
+                self.game.close()
+            case "open":
+                self.game.open()
+        try:
+            self.adminOutbox.put_nowait(
+                ("dashboard", {"type": "update", "data": self.toState()})
+            )
+            # not sure what to put here yet
+            # self.adminOutbox.put_nowait((f"room-{self.id}", msg))
+        except asyncio.QueueFull:
+            pass
 
     async def addPlayer(self, uuid: UUID, username: str) -> None:
         await self.adminOutbox.put(
@@ -116,7 +153,7 @@ class GameActor:
         )
         self.game.popPlayer(uuid)
 
-    async def adminEvents(self):
+    async def adminEvents(self) -> None:
         while True:
             # wait for us to have to resend a packet
             await self.renewStateEvent.wait()
@@ -125,8 +162,7 @@ class GameActor:
             )
             self.renewStateEvent.clear()
 
-    async def runIo(self):
-        await self.game.start()
+    async def runIo(self) -> None:
         while True:
             # TODO: make this depend on other factors!
             await asyncio.sleep(1)

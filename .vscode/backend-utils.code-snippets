@@ -2,13 +2,13 @@
 	"FastAPI Room Endpoint Template": {
 		"prefix": "roomendpoint",
 		"body": [
-			"@router.post(\"/api/room-${1:roomID}/${2:EXAMPLE}\")",
-			"async def ${3:EXAMPLE_SNIPPET}(request: Request, msg: ${4:DashCreateMsg}, roomID: int):",
-			"    \"\"\"POST API endpoint for ${2:EXAMPLE}",
+			"@router.post(\"/api/room-{roomID}/${1:EXAMPLE}\")",
+			"async def ${2:EXAMPLE_SNIPPET}(request: Request, msg: ${3:DashCreateMsg}, roomID: int):",
+			"    \"\"\"POST API endpoint for ${1:EXAMPLE}",
 			"",
 			"    Args:",
 			"        request (Request): The request object describing the app and client",
-			"        msg (${4:DashCreateMsg}): The pydantic form sent",
+			"        msg (${3:DashCreateMsg}): The pydantic form sent",
 			"        roomID (int): The room to which the request pertains",
 			"",
 			"    Raises:",

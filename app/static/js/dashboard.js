@@ -50,7 +50,7 @@ async function rmGame(cardID) {
     }
     // now we know the ID is valid
     console.log(`requested deletion at ${cardID}`)
-    const resp = await csrfFetch("/api/room/delRoom", {
+    const resp = await csrfFetch("/api/delRoom", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -66,7 +66,7 @@ async function rmGame(cardID) {
 
 async function createGame(gameName) {
     console.log(`requested new game name ${gameName}`)
-    csrfFetch("/api/room/createRoom", {
+    csrfFetch("/api/createRoom", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

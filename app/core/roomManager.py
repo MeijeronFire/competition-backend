@@ -6,7 +6,7 @@ from typing import Any
 from uuid import UUID
 
 from game import GameActor
-from game import Uber, Othello, Example, TestGame
+from game import TestGame
 
 from app.auth.crypt import computeJSONHash
 from app.utils import log_async_error
@@ -27,9 +27,6 @@ class RoomManager:
         # THIS IS BAD
         # THIS IS BAD
         self.games = {
-            "uber": Uber,
-            "othello": Othello,
-            "example": Example,
             "testGame": TestGame,
         }
 
@@ -60,13 +57,11 @@ class RoomManager:
         return roomID
 
     async def delete(self, roomID: int) -> None:
-        toBeDel = self.rooms[roomID].game.name
         if roomID not in self.rooms.keys():
             print("useless ID provided.")
             return
         await self.rooms[roomID].stop()
         self.rooms.pop(roomID)
-        print(f"\033[1;32mINFO:\t\033[0m  Killed {toBeDel} at {roomID}")
         # maybe call some sort of destructor on the object itself?
 
     # the "official" way to build the complete state

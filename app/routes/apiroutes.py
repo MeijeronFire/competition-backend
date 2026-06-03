@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
 
-from typing import Annotated, cast
+from typing import Annotated, Literal, cast
 
 from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.responses import FileResponse
@@ -75,9 +75,19 @@ async def createRoom(request: Request, msg: DashCreateMsg):
     return Response(status_code=200)
 
 
-@router.post("/api/room-{roomID}/EXAMPLE")
-async def EXAMPLE_SNIPPET(request: Request, msg: DashCreateMsg, roomID: int):
-    """POST API endpoint for EXAMPLE
+@router.post("/api/room-{roomID}/{operation}")
+async def EXAMPLE_SNIPPET(
+    request: Request,
+    roomID: int,
+    operation: Literal["start", "stop", "open", "close"],
+):
+    """POST API endpoint for starting the game @ roomID
+
+    Note that starting the room closes new players from joining and locks
+    existing players, i.e. throws an error if players leave.
+
+    Since there are no actual arguments required other than the ID of the
+    room to be started, it can be empty.
 
     Args:
         request (Request): The request object describing the app and client
@@ -100,7 +110,7 @@ async def EXAMPLE_SNIPPET(request: Request, msg: DashCreateMsg, roomID: int):
     if roomID not in state.rMgr.rooms:
         raise HTTPException(404, "Requested game does not exist.")
 
-    # ok so the game exists, user is fine, we can do something
+    state.rMgr.rooms[roomID].setGame(operation)
 
 
 # to allow anyone to see the icon, not that important

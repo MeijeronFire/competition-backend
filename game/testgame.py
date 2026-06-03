@@ -1,12 +1,16 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
 
+import logging
 import random
-from typing import Any, Awaitable, Callable
+from typing import Literal
 from pydantic import BaseModel, ConfigDict, ValidationError
 from uuid import UUID
 from game.models import Game
 import asyncio
+
+logger = logging.getLogger(__name__)
+
 """
 Woop woop game layer
 """
@@ -23,7 +27,7 @@ class fillMessage(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 
-class TestGame():
+class TestGame:
     def __init__(self) -> None:
         self.name = "TestGame"
         self.description = f"""
@@ -39,16 +43,14 @@ class TestGame():
         self.playerNames: dict[UUID, str] = {}
         self.UUIDs: list[UUID] = []
         self.turnNr = 0
-        self.roomState: list[dict[str, str]] = []
+        self.roomState: Literal["open", "closed", "running", "stopped"] = "closed"
 
         self._running = False
-        self._task: asyncio.Task[None] | None = None
+        self._task = asyncio.create_task(self._gameLoop())
         self._sendQueue: asyncio.Queue[dict | None] = asyncio.Queue()
         self._recvQueue: asyncio.Queue[dict] = asyncio.Queue()
         # bit of an ugly hack, but it will work
         self.renewStateEvent = asyncio.Event()
-
-        self.closed = True
 
     def getState(self):
         return {}
@@ -73,13 +75,19 @@ class TestGame():
             raise Exception("Error: no players, so cannot get turn.")
         return self.UUIDs[self.turn()]
 
-    async def start(self) -> None:
-        self._task = asyncio.create_task(self._gameLoop())
+    def start(self) -> None:
+        self.roomState = "running"
 
-    async def stop(self) -> None:
+    def stop(self) -> None:
+        self.roomState = "stopped"
         if self._task:
             self._task.cancel()
-            await asyncio.gather(self._task, return_exceptions=True)
+
+    def open(self) -> None:
+        self.roomState = "open"
+
+    def close(self) -> None:
+        self.roomState = "closed"
 
     async def parseMessage(self, data: dict) -> dict | None:
         await self._recvQueue.put(data)
@@ -87,30 +95,39 @@ class TestGame():
 
     async def _gameLoop(self) -> None:
         # main game loop
-        while True:
-            # print('waiting')
-            await asyncio.sleep(5)
-            # we need some way to update the so-called "room-state"
-            # since the message digest is calculated seperately, we
-            # simply update the state and afterwars push to clients
+        try:
+            while True:
+                # print('waiting')
+                await asyncio.sleep(5)
+                # we need some way to update the so-called "room-state"
+                # since the message digest is calculated seperately, we
+                # simply update the state and afterwars push to clients
 
-            self.roomState = [{
-                "type": random.choice([
-                    "primary",
-                    "secondary",
-                    "success",
-                    "danger",
-                    "warning",
-                    "info",
-                    "light",
-                    "dark"
-                ]),
-                "msg": "Pr.OfConc."
-            }]
-            self.description = "The quick brown fox <span class=\"text-warning\">" + \
-                random.choice(["jumps", "sits", "sleeps", "cries",
-                              "laughs"]) + "</span> over the lazy dog."
-            self.renewStateEvent.set()
+                # self.roomState = [
+                #     {
+                #         "type": random.choice(
+                #             [
+                #                 "primary",
+                #                 "secondary",
+                #                 "success",
+                #                 "danger",
+                #                 "warning",
+                #                 "info",
+                #                 "light",
+                #                 "dark",
+                #             ]
+                #         ),
+                #         "msg": "Pr.OfConc.",
+                #     }
+                # ]
+                self.description = (
+                    'The quick brown fox <span class="text-warning">'
+                    + random.choice(["jumps", "sits", "sleeps", "cries", "laughs"])
+                    + "</span> over the lazy dog."
+                )
+                self.renewStateEvent.set()
+        except asyncio.CancelledError:
+            pass
 
 
 # compile time verification
