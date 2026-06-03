@@ -101,6 +101,21 @@ class GameActor:
             "roomState": self._genBadges(),
         }
 
+    async def addPlayer(self, uuid: UUID, username: str) -> None:
+        await self.adminOutbox.put(
+            (
+                f"room-{self.id}",
+                {"type": "newPlayer", "data": {"UUID": str(uuid), "name": username}},
+            )
+        )
+        self.game.addPlayer(uuid, username)
+
+    async def popPlayer(self, uuid: UUID) -> None:
+        await self.adminOutbox.put(
+            (f"room-{self.id}", {"type": "delPlayer", "data": {"UUID": str(uuid)}})
+        )
+        self.game.popPlayer(uuid)
+
     async def adminEvents(self):
         while True:
             # wait for us to have to resend a packet

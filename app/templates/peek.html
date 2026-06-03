@@ -13,21 +13,59 @@
             </div>
         </div>
 
-        <div class="mt-3 d-flex gap-2 justify-content-center w-100">
-            <button class="btn btn-primary">Open game</button>
-            <button class="btn btn-info">Start game</button>
+        <div class="mt-3 d-flex gap-2 justify-content-center w-100" x-data>
+            <button class="btn btn-primary"
+                    @click="console.log('open game')">Open game</button>
+            <button class="btn btn-info"
+                    @click="console.log('start game')">Start game</button>
         </div>
     </div>
 
     <!-- Right: Accordion -->
     <div class="w-25 flex-column">
-        <div class="accordion" id="playernames">
+        <div class="accordion border-primary"
+             id="playernames"
+             x-data>
+
+            {# title of stuff below #}
             <div class="accordion-item" id="title">
-                <h3 class="accordion-header">
-                    Test
-                </h3>
+                <h4 class="accordion-header p-2 text-center">
+                    Connected players
+                </h4>
             </div>
-            {# JS inserts players here#}
+
+            {# individual item #}
+            <template x-for="item in Object.values($store.users)">
+                <div class="accordion-item"
+                     :id="'card-' + item.UUID">
+                    {# title of accordion item #}
+                    <h2 class="accordion-header">
+                        {# button to open it #}
+                        <button class="accordion-button collapsed"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                :data-bs-target="'#' + item.UUID"
+                                aria-expanded="true"
+                                :aria-controls="item.UUID"
+                                x-text="item.name"></button>
+                    </h2>
+
+                    {# content of accordion #}
+                    <div :id="item.UUID"
+                         class="accordion-collapse collapse"
+                         :aria-labelledby="item.UUID"
+                         data-bs-parent="#playernames">
+                        <div class="accordion-body">
+                            <button class="btn btn-success"
+                                    x-text="'nr 1'"
+                                    @click="console.log('nr 1')"></button>
+                            <button class="btn btn-success"
+                                    x-text="'nr 2'"
+                                    @click="console.log('nr 2')"></button>
+                        </div>
+                    </div>
+                </div>
+            </template>
         </div>
     </div>
 
@@ -37,7 +75,9 @@
 {% block scripts %}
 <script>
     window.CSRF_TOKEN = "{{ csrf }}";
-    window.roomID = {{ roomID }}
+    window.roomID = {{ roomID }};
+    window.initialJSON = {{ initialJSON | tojson | safe }};
 </script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="{{ url_for('static', path='/js/peek.js') }}"></script>
 {% endblock %}

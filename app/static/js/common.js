@@ -1,3 +1,6 @@
+// SPDX - License - Identifier: GPL - 3.0 - or - later
+// Copyright(C) 2026 Otto Crawford
+
 // flashing a warning if something is wrong
 function warn(msg, title = "Error") {
     const warning = document.createElement("div");
@@ -10,4 +13,20 @@ function warn(msg, title = "Error") {
     `;
 
     document.getElementById("alert-container").appendChild(warning);
+}
+
+// patched version of fetch to include CSRF token
+function csrfFetch(url, options = {}) {
+    const method = (options.method || "GET").toUpperCase();
+
+    const headers = new Headers(options.headers || {});
+
+    if (method === "POST") {
+        headers.set("X-CSRF-Token", window.CSRF_TOKEN);
+    }
+
+    return fetch(url, {
+        ...options,
+        headers
+    });
 }

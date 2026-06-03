@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Otto Crawford
+
 import asyncio
 import json
 import logging
@@ -23,7 +26,6 @@ class test(BaseModel):
 
 @router.get("/stream/dashboard", response_class=EventSourceResponse)
 async def dashboardStream(request: Request):
-    yield {"data": "connected"}
     state = cast(StateModel, request.app.state)
     # now that we have a new connection, we add it to our internal array
     logger.info("new SSE connection")
@@ -50,6 +52,31 @@ async def dashboardStream(request: Request):
         state.adminStream.popAdmin("dashboard", queue)
 
 
-@router.get("/stream/{roomID}")
-async def roomStream(roomID: int):
-    pass
+@router.get("/stream/{roomID}", response_class=EventSourceResponse)
+async def roomStream(request: Request, roomID: int):
+    state = cast(StateModel, request.app.state)
+    # now that we have a new connection, we add it to our internal array
+    logger.info(f"new SSE connection @{roomID}")
+    queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
+    state.adminStream.addAdmin(f"room-{roomID}", queue)
+
+    try:
+        while True:
+            # end connection at disconnect
+            if await request.is_disconnected():
+                break
+
+            # timeout for stale connections
+            try:
+                msg = await asyncio.wait_for(queue.get(), timeout=1)
+            except asyncio.TimeoutError:
+                continue
+
+            # handle message sending
+            # queue.task_done()
+            print(json.dumps(msg))
+            yield {"data": json.dumps(msg)}
+    finally:
+        # disconnection hook
+        logger.info(f"Removed SSE connection @{roomID}")
+        state.adminStream.popAdmin(f"room-{roomID}", queue)
