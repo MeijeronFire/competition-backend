@@ -34,6 +34,9 @@ async def websocket_endpoint(ws: WebSocket, roomID: int):
     preprocessing for incoming messages. That means other code is responsible
     for handling issues like XSS protection or malformed JSON.
 
+    TODO:
+        Untangle a bit of this registration code
+
     Forwarding:
         After verification, all incoming messages are
         forwarded like here:
@@ -88,7 +91,7 @@ async def websocket_endpoint(ws: WebSocket, roomID: int):
     connectedUser.uname(regPacket.name)
     # add this client to the list of players
     try:
-        room.game.addPlayer(connectedUser.uuid, regPacket.name)
+        await room.addPlayer(connectedUser.uuid, regPacket.name)
         # MAKE THIS CONDITIONAL
         # which function to execute when the user receives a packet
 
@@ -108,5 +111,5 @@ async def websocket_endpoint(ws: WebSocket, roomID: int):
         # delete it from known connections
         state.cMgr.disconnect(connectedUser.uuid)
         # inform room that the user does not exist any longer
-        room.game.popPlayer(connectedUser.uuid)
+        await room.popPlayer(connectedUser.uuid)
         return

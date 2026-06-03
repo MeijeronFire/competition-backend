@@ -14,7 +14,7 @@ events.onmessage = (event) => {
     // terrible code but it is objectively funny to access:
     // newcard = data.data = data.data.data
     let msg;
-
+    console.log(event.data)
     try {
         msg = JSON.parse(JSON.parse(event.data).data);
     } catch (error) {
@@ -25,12 +25,12 @@ events.onmessage = (event) => {
     console.log(msg)
 
     switch (msg.type) {
-        case "update":
-            let updateCard = msg.data
-            Alpine.store('cards')[updateCard.id] = updateCard
+        case "newPlayer":
+            let updateList = msg.data
+            Alpine.store('users')[updateList.UUID] = updateList
             break;
-        case "delete":
-            delete Alpine.store('cards')[msg.data.id]
+        case "delPlayer":
+            delete Alpine.store('users')[msg.data.UUID]
             break;
         case "create":
             let newCard = msg.data

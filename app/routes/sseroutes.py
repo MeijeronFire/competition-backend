@@ -52,7 +52,7 @@ async def dashboardStream(request: Request):
         state.adminStream.popAdmin("dashboard", queue)
 
 
-@router.get("/stream/{roomID}")
+@router.get("/stream/{roomID}", response_class=EventSourceResponse)
 async def roomStream(request: Request, roomID: int):
     state = cast(StateModel, request.app.state)
     # now that we have a new connection, we add it to our internal array
@@ -74,7 +74,9 @@ async def roomStream(request: Request, roomID: int):
 
             # handle message sending
             # queue.task_done()
+            print(json.dumps(msg))
             yield {"data": json.dumps(msg)}
     finally:
         # disconnection hook
+        logger.info(f"Removed SSE connection @{roomID}")
         state.adminStream.popAdmin(f"room-{roomID}", queue)

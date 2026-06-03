@@ -29,7 +29,7 @@
 
             {# title of stuff below #}
             <div class="accordion-item" id="title">
-                <h4 class="accordion-header p-2">
+                <h4 class="accordion-header p-2 text-center">
                     Connected players
                 </h4>
             </div>
@@ -37,7 +37,7 @@
             {# individual item #}
             <template x-for="item in Object.values($store.users)">
                 <div class="accordion-item"
-                    :id="'card-' + item.UUID">
+                     :id="'card-' + item.UUID">
                     {# title of accordion item #}
                     <h2 class="accordion-header">
                         {# button to open it #}
