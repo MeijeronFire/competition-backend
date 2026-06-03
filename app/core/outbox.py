@@ -46,7 +46,7 @@ class AdminStream(Actor):
             # first argument is destination
             destination = msg[0]
             if destination not in self._outQueues:
-                logger.info("Destination not yet known")
+                # logger.info("Destination not yet known")
                 continue
             outGoingQueues = self._outQueues[destination]
 
