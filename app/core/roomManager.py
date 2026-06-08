@@ -7,6 +7,7 @@ from uuid import UUID
 
 from game import GameActor
 from game import TestGame
+from game.uber import Uber
 
 from app.auth.crypt import computeJSONHash
 from app.utils import log_async_error
@@ -26,9 +27,8 @@ class RoomManager:
         # THIS IS BAD
         # THIS IS BAD
         # THIS IS BAD
-        self.games = {
-            "testGame": TestGame,
-        }
+        # maybe a .name?
+        self.games = {"testGame": TestGame, "uber": Uber}
 
     async def create(self, game: str) -> int | None:
         # room_id = randint(10000, 99999)

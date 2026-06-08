@@ -4,7 +4,7 @@
 import logging
 import random
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict
 from uuid import UUID
 from game.models import Game
 import asyncio
@@ -87,6 +87,9 @@ class TestGame:
         self.roomState = "open"
 
     def close(self) -> None:
+        self.roomState = "closed"
+
+    def reset(self) -> None:
         self.roomState = "closed"
 
     async def parseMessage(self, data: dict) -> dict | None:

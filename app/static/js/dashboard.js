@@ -60,7 +60,7 @@ async function rmGame(cardID) {
         })
     });
     if (!resp.ok) {
-        warn("reloading the page will probably fix the issue. If not, contact maintainer.", "Invalid request")
+        warn("Reloading the page will probably fix the issue. If not, contact maintainer.", "Invalid request")
     }
 }
 

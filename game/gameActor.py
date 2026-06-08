@@ -110,7 +110,9 @@ class GameActor:
             "roomState": self._genBadges(),
         }
 
-    def setGame(self, operation: Literal["start", "stop", "open", "close"]) -> None:
+    def setGame(
+        self, operation: Literal["start", "stop", "open", "close", "reset"]
+    ) -> None:
         # we need to tell both the dashboard and the game that we
         # have changed the state
 
@@ -129,6 +131,8 @@ class GameActor:
                 self.game.close()
             case "open":
                 self.game.open()
+            case "reset":
+                self.game.reset()
         try:
             self.adminOutbox.put_nowait(
                 ("dashboard", {"type": "update", "data": self.toState()})
@@ -160,12 +164,24 @@ class GameActor:
             await self.adminOutbox.put(
                 ("dashboard", {"type": "update", "data": self.toState()})
             )
+            await self.adminOutbox.put(
+                (
+                    f"room-{self.id}",
+                    {"type": "glassesEvent", "data": self.game.genericState},
+                )
+            )
             self.renewStateEvent.clear()
 
     async def runIo(self) -> None:
+        oldturn = 0
         while True:
             # TODO: make this depend on other factors!
-            await asyncio.sleep(1)
+            if self.game.turnNr != oldturn:
+                oldturn = self.game.turnNr
+                await asyncio.sleep(2)
+            else:
+                await asyncio.sleep(0.1)
+
             # print(self.game.points)
             # print(self.game.playerNames)
             if len(self.game.UUIDs) < self.game.minPlayers:

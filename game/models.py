@@ -16,6 +16,7 @@ class Game(Protocol):
     name: str
     description: str
     renewStateEvent: asyncio.Event
+    turnNr: int
     roomState: Literal["open", "closed", "running", "stopped"]
 
     """Game order
@@ -30,7 +31,8 @@ class Game(Protocol):
         7. parent kills the game
     """
 
-    def getState(self) -> dict: ...
+    def getState(self) -> dict:
+        return {}
 
     # when the game starts, so when players can make moves
     def start(self) -> None: ...
@@ -43,6 +45,8 @@ class Game(Protocol):
 
     # when the game closes, we players can not join but the game isn't started yet
     def close(self) -> None: ...
+
+    def reset(self) -> None: ...
 
     def turnUUID(self) -> UUID: ...
 

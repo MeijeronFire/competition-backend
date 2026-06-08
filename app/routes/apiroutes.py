@@ -76,10 +76,10 @@ async def createRoom(request: Request, msg: DashCreateMsg):
 
 
 @router.post("/api/room-{roomID}/{operation}")
-async def EXAMPLE_SNIPPET(
+async def roomStateOperation(
     request: Request,
     roomID: int,
-    operation: Literal["start", "stop", "open", "close"],
+    operation: Literal["start", "stop", "open", "close", "reset"],
 ):
     """POST API endpoint for starting the game @ roomID
 
