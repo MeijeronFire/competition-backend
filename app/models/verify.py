@@ -1,6 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
 
+from typing import Literal
+from uuid import UUID
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -74,45 +77,15 @@ class DashCreateMsg(BaseModel):
     gameName: str
 
 
-class DashUpdateMsg(BaseModel):
-    """Dashboard Update [room] Message
+class DashRoomPlayerOperation(BaseModel):
+    """Dashboard Room Player Operation
 
-    TODO: the user does not yet have the option to change a room.
-
-    This class models a change the user makes in a dashboard to how
-    a game works, i.e. opening it, closing it, removing players,
-    adding players, etc.
-
+    Messages of this type model the changes a user can make to a player,
+    currently kicking a player.
 
     Args:
         BaseModel (BaseModel): Inheritance
     """
 
-    pass
-
-
-class DashDeleteMsg(BaseModel):
-    """Dashboard Delete [room] Message
-
-    This class models the deletion request of an admin. It only
-    requires the ID of the room that is to be deleted
-
-    Args:
-        BaseModel (BaseModel): Inheritance
-    """
-
-    roomID: int
-
-
-class DashGetRoomStateMsg(BaseModel):
-    """Dashboard Get Room State Message
-
-    This class models the request to get the state of a given
-    room. It only requires the ID of the room of which the state
-    is requested.
-
-    Args:
-        BaseModel (BaseModel): Inheritance
-    """
-
-    roomID: int
+    action: Literal["kick"]
+    targetPlayerUUID: UUID

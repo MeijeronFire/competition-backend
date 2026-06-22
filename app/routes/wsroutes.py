@@ -40,7 +40,7 @@ async def websocket_endpoint(ws: WebSocket, roomID: int):
     Forwarding:
         After verification, all incoming messages are
         forwarded like here:
-        `Supervisor.parse(msg["action"], msg["data"])`
+        `room.inbox.put((connectedUser.uuid, data))`
         If either of these arguments are not present, the message is ignored.
 
 

@@ -1,10 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
 from app.models.primitives import Actor
-from app.models.verify import (
-    DashGetRoomStateMsg,
-    DashUpdateMsg,
-)
 from app.core import RoomManager
 import asyncio
 from pydantic import ValidationError
@@ -51,15 +47,7 @@ class GameSupervisor:
             )
         )
 
-    def _update(self, data: dict) -> None:
-        """
-        On an update request, we look at the type of update.
-        Currently we support closing a room and starting a room.
-        """
-        try:
-            msg = DashUpdateMsg.model_validate(data)
-        except ValidationError:
-            return
+    def kick(self, targetUUID: UUID): ...
 
     async def delete(self, roomID: int) -> None:
         """
@@ -78,61 +66,3 @@ class GameSupervisor:
                 },
             )
         )
-
-    async def _getState(self, msg: dict) -> None:
-        # logger.info(self._rMgr.buildState())
-        await self._adminOutbox.put(
-            (
-                "dashboard",
-                {
-                    "type": "fullState",
-                    "data": self._rMgr.buildState(),
-                    "stateHash": self.generateStateHash(),
-                },
-            )
-        )
-
-    async def _getRoomState(self, data: dict) -> None:
-        try:
-            msg = DashGetRoomStateMsg.model_validate(data)
-        except ValidationError:
-            logger.error(
-                f"Could not verify msg {data}, is not a valid DashGetRoomStateMsg."
-            )
-            return
-
-        roomState = dict(
-            [
-                (
-                    str(uuid),
-                    {
-                        "name": self._rMgr.rooms[msg.roomID].game.playerNames[uuid],
-                        "UUID": str(uuid),
-                    },
-                )
-                for uuid in self._rMgr.rooms[msg.roomID].game.UUIDs
-            ]
-        )
-
-        msg = (
-            "dashboard",
-            {
-                "type": "fullRoomState",
-                "data": roomState,
-                "stateHash": computeJSONHash(roomState),
-            },
-        )
-        logger.info(msg)
-        await self._adminOutbox.put(msg)
-
-    async def parse(self, action: str, msg: dict):
-        # implementation of our simple CRUD interface
-        match action:
-            case "update":
-                self._update(msg)
-            case "getState":
-                await self._getState(msg)
-            case "getRoomState":
-                await self._getRoomState(msg)
-            case _:
-                raise Exception("Improper command provided to supervisor")

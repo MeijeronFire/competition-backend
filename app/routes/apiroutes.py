@@ -11,21 +11,23 @@ from app.auth.session import isAuthenticated
 
 # form validation
 from app.models.datastructs import StateModel
-from app.models.verify import DashCreateMsg, DashDeleteMsg, LoginForm
+from app.models.verify import DashCreateMsg, DashRoomPlayerOperation, LoginForm
 
 router = APIRouter()
 
 
-@router.post("/api/delRoom")
-async def delroom(request: Request, msg: DashDeleteMsg):
+@router.post("/api/room-{roomID}/delRoom")
+async def delroom(request: Request, roomID: int):
     """POST API endpoint for requesting the deletion of a room
 
     Args:
         request (Request): The request object describing the app and client
+        roomID (int): The ID of the room to delete
 
     Returns:
         400: HTTPException if CSRF token is incorrect
         401: HTTPException if user is not authenticated
+        404: HTTPException if room does not exist
     """
     state = cast(StateModel, request.app.state)
 
@@ -35,11 +37,11 @@ async def delroom(request: Request, msg: DashDeleteMsg):
     if not validateCsrf(request):
         raise HTTPException(400, "CSRF token incorrect, operation not allowed.")
 
-    if msg.roomID not in state.rMgr.rooms:
+    if roomID not in state.rMgr.rooms:
         raise HTTPException(404, "Requested room does not exist.")
 
     # so we are allowed to do it
-    await state.supervisor.delete(msg.roomID)
+    await state.supervisor.delete(roomID)
 
     return Response(status_code=200)
 
@@ -81,13 +83,48 @@ async def roomStateOperation(
     roomID: int,
     operation: Literal["start", "stop", "open", "close", "reset"],
 ):
-    """POST API endpoint for starting the game @ roomID
+    """POST API endpoint for changing the room state @ roomID
 
     Note that starting the room closes new players from joining and locks
     existing players, i.e. throws an error if players leave.
 
     Since there are no actual arguments required other than the ID of the
     room to be started, it can be empty.
+
+    Also note that this refers specifically to the room state, not the game
+    state.
+
+    Args:
+        request (Request): The request object describing the app and client
+        roomID (int): The room to which the request pertains
+        operation (string): The operation to perform
+
+    Raises:
+        401 (HTTPException): If not authenticated
+        400 (HTTPException): If CSRF token is incorrect, so operation not allowed
+        404 (HTTPException): If requested room does not exist
+    """
+    state = cast(StateModel, request.app.state)
+
+    if not isAuthenticated(request):
+        raise HTTPException(401, "Not authenticated. Operation not permitted.")
+
+    if not validateCsrf(request):
+        raise HTTPException(400, "CSRF token incorrect, operation not allowed.")
+
+    if roomID not in state.rMgr.rooms:
+        raise HTTPException(404, "Requested game does not exist.")
+
+    state.rMgr.rooms[roomID].setGame(operation)
+
+
+@router.post("/api/room-{roomID}/playerOperation")
+async def roomPlayerOperation(
+    request: Request, roomID: int, msg: DashRoomPlayerOperation
+):
+    """POST API endpoint for changing players connected to room
+
+    The supported operations are kicking and banning (TODO: implement banning)
 
     Args:
         request (Request): The request object describing the app and client
@@ -110,7 +147,9 @@ async def roomStateOperation(
     if roomID not in state.rMgr.rooms:
         raise HTTPException(404, "Requested game does not exist.")
 
-    state.rMgr.rooms[roomID].setGame(operation)
+    # first we parse the incoming message
+    if msg.action == "kick":
+        state.supervisor.kick(msg.targetPlayerUUID)
 
 
 # to allow anyone to see the icon, not that important

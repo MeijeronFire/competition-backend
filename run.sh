@@ -12,5 +12,5 @@ uv run uvicorn app:app \
   --port 8000 \
   --ssl-keyfile key.pem \
   --ssl-certfile cert.pem \
-  --timeout-graceful-shutdown 1
-  #--reload # DO NOT, repeat DO NOT run reload in prod!!!!!
+  --timeout-graceful-shutdown 1 \
+  --reload # DO NOT, repeat DO NOT run reload in prod!!!!!

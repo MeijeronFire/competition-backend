@@ -7,7 +7,8 @@ theme:
     - content.code.copy
 
 nav:
-  - Home: 00-meta.md
+  - Home: index.md
+  - Meta: 00-meta.md
   - Core: 01-core.md
   - Prerequisites: 02-prerequisite-knowledge.md
   - API: 50-source-reference/01-top.md

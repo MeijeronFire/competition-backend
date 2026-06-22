@@ -50,14 +50,11 @@ async function rmGame(cardID) {
     }
     // now we know the ID is valid
     console.log(`requested deletion at ${cardID}`)
-    const resp = await csrfFetch("/api/delRoom", {
+    const resp = await csrfFetch(`/api/room-${cardID}/delRoom`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            roomID: cardID
-        })
+        }
     });
     if (!resp.ok) {
         warn("Reloading the page will probably fix the issue. If not, contact maintainer.", "Invalid request")

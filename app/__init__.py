@@ -35,7 +35,7 @@ app.add_middleware(
 # print warning if above is not secure
 if _SECRET_KEY in ["dev-key", "test", "foo", "bar", "foobar"]:
     print(
-        "\033[1;33mWARNING: \033[0m Insecure session middleware _SECRET_KEY! Change for any serieus use!"
+        "\033[1;33mWARNING: \033[0m Insecure session middleware _SECRET_KEY! Change for any serious use!"
     )
 
 # include everything in router/
