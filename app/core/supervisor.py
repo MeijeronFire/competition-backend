@@ -47,7 +47,8 @@ class GameSupervisor:
             )
         )
 
-    def kick(self, targetUUID: UUID): ...
+    async def kick(self, roomID: int, targetUUID: UUID):
+        await self._rMgr.rooms[roomID].kickPlayer(targetUUID)
 
     async def delete(self, roomID: int) -> None:
         """

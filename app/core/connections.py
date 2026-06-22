@@ -52,7 +52,13 @@ class ConnectionMgr:
         self.connections[client.ws] = client
         self.clients[client.uuid] = client
 
-    def disconnect(self, uuid: UUID):
+    async def disconnect(self, uuid: UUID):
+        # make sure player is disconnected
+        # TODO: send message informing of the disconnect, add optional reason as argument
+        try:
+            await self.clients[uuid].ws.close()
+        except Exception:
+            pass
         # safe .remove method
         self.connections.pop(self.clients[uuid].ws)
         self.clients.pop(uuid)
@@ -79,5 +85,6 @@ class ConnectionMgr:
 
         await asyncio.gather(*(send(ws) for ws in connections))
 
+        # might be a dumb way to do this. TODO: check later
         for ws in dead:
-            self.disconnect(ws)
+            await self.disconnect(ws)

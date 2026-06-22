@@ -95,11 +95,7 @@
                          data-bs-parent="#playernames">
                         <div class="accordion-body">
                             <button class="btn btn-success"
-                                    x-text="'nr 1'"
-                                    @click="console.log('nr 1')"></button>
-                            <button class="btn btn-success"
-                                    x-text="'nr 2'"
-                                    @click="console.log('nr 2')"></button>
+                                    @click="kickPlayer(item.UUID)">kick</button>
                         </div>
                     </div>
                 </div>

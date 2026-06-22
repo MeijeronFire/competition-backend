@@ -109,7 +109,7 @@ async def websocket_endpoint(ws: WebSocket, roomID: int):
     except WebSocketDisconnect:
         # on disconnect run the manager disconnect hook
         # delete it from known connections
-        state.cMgr.disconnect(connectedUser.uuid)
+        await state.cMgr.disconnect(connectedUser.uuid)
         # inform room that the user does not exist any longer
         await room.popPlayer(connectedUser.uuid)
         return

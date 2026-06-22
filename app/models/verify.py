@@ -2,7 +2,6 @@
 # Copyright (C) 2026 Otto Crawford
 
 from typing import Literal
-from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
@@ -88,4 +87,4 @@ class DashRoomPlayerOperation(BaseModel):
     """
 
     action: Literal["kick"]
-    targetPlayerUUID: UUID
+    targetPlayerUUID: str

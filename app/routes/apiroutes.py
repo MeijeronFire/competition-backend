@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Otto Crawford
 
 from typing import Annotated, Literal, cast
+from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.responses import FileResponse
@@ -77,7 +78,7 @@ async def createRoom(request: Request, msg: DashCreateMsg):
     return Response(status_code=200)
 
 
-@router.post("/api/room-{roomID}/{operation}")
+@router.post("/api/room-{roomID}/state-{operation}")
 async def roomStateOperation(
     request: Request,
     roomID: int,
@@ -124,7 +125,11 @@ async def roomPlayerOperation(
 ):
     """POST API endpoint for changing players connected to room
 
-    The supported operations are kicking and banning (TODO: implement banning)
+    The supported operations are: kicking
+
+    TODO:
+        implement banning players
+        make this interact with client objects rather than be just room specific
 
     Args:
         request (Request): The request object describing the app and client
@@ -149,7 +154,12 @@ async def roomPlayerOperation(
 
     # first we parse the incoming message
     if msg.action == "kick":
-        state.supervisor.kick(msg.targetPlayerUUID)
+        # TODO: maybe move the disconnect responsibility to the supervisor
+        await state.cMgr.disconnect(UUID(msg.targetPlayerUUID))
+
+        await state.supervisor.kick(roomID, UUID(msg.targetPlayerUUID))
+    else:
+        raise NotImplementedError
 
 
 # to allow anyone to see the icon, not that important

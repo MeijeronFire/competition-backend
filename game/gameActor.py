@@ -157,6 +157,9 @@ class GameActor:
         )
         self.game.popPlayer(uuid)
 
+    async def kickPlayer(self, uuid: UUID) -> None:
+        await self.popPlayer(uuid)
+
     async def adminEvents(self) -> None:
         while True:
             # wait for us to have to resend a packet

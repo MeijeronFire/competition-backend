@@ -1,9 +1,11 @@
 // SPDX - License - Identifier: GPL - 3.0 - or - later
 // Copyright(C) 2026 Otto Crawford
 
+// TODO: add documentation to show what the users object looks like
+
 document.addEventListener('alpine:init', () => {
     Alpine.store('users', {
-        // like dict unpacking in python, so you can access a card with $store.cards.<cardID>
+        // like dict unpacking in python, so you can access a card with $store.users.<user UUID>
         ...(window.initialJSON || {})
     });
 });
@@ -33,10 +35,6 @@ events.onmessage = async (event) => {
         case "delPlayer":
             delete Alpine.store('users')[msg.data.UUID]
             break;
-        case "create":
-            let newCard = msg.data
-            Alpine.store('cards')[newCard.id] = newCard
-            break;
         case "glassesEvent":
             let after = msg.data;
             const changes = before.flatMap((v, i) =>
@@ -65,7 +63,29 @@ window.updateRoom = async function updateRoom(action) {
 
     // now we know the ID is valid
     console.log(`requested game state update at ${window.roomID}`)
-    const resp = await csrfFetch(`/api/room-${window.roomID}/${action}`, { method: "POST" });
+    const resp = await csrfFetch(`/api/room-${window.roomID}/state-${action}`, { method: "POST" });
+    if (!resp.ok) {
+        warn("Reloading the page will probably fix the issue. If not, contact maintainer.", "Invalid request")
+    }
+}
+
+window.kickPlayer = async function kickPlayer(UUID) {
+    if (!(UUID in Alpine.store('users'))) {
+        throw ("Player UUID provided that does not exist");
+        return;
+    }
+    // now we know the ID is valid
+    console.log(`requested player kick of player ${UUID}, named ${Alpine.store('users')[UUID].name}`)
+    const resp = await csrfFetch(`/api/room-${window.roomID}/playerOperation`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            action: "kick",
+            targetPlayerUUID: UUID
+        })
+    });
     if (!resp.ok) {
         warn("Reloading the page will probably fix the issue. If not, contact maintainer.", "Invalid request")
     }
