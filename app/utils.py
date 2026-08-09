@@ -4,6 +4,7 @@
 import logging
 import asyncio
 import traceback
+from typing import Any
 
 logging.basicConfig(
     level=logging.INFO,
@@ -18,7 +19,7 @@ logging.basicConfig(
 )
 
 
-def log_async_error(task: asyncio.Task):
+def log_async_error(task: asyncio.Task[Any]):
     """Log async errors
 
     This quick function logs all errors spawning from async tasks.
@@ -32,5 +33,5 @@ def log_async_error(task: asyncio.Task):
         task.result()
     except asyncio.CancelledError:
         pass
-    except Exception as e:
+    except Exception:
         traceback.print_exc()

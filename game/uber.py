@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
 
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 import asyncio
 from pydantic import BaseModel, ConfigDict, ValidationError
 from random import randint
+from game.models import Game
 
 
 class moveMessage(BaseModel):
@@ -24,7 +25,7 @@ class Uber:
         self.minPlayers: int = 1
         self.UUIDs: list[UUID] = []
         self._glasses = [0, 0, 0, 0, 0, 0]
-        self.genericState: list = self._glasses
+        self.genericState: list[Any] = self._glasses
         self.playerNames: dict[UUID, str] = {}
         self.points: dict[UUID, int] = {}
         self.name: str = "uber"
@@ -37,8 +38,8 @@ class Uber:
 
         self._running = False
         self._task: asyncio.Task[None] | None = None
-        self._sendQueue: asyncio.Queue[dict | None] = asyncio.Queue()
-        self._recvQueue: asyncio.Queue[dict] = asyncio.Queue()
+        self._sendQueue: asyncio.Queue[dict[Any, Any] | None] = asyncio.Queue()
+        self._recvQueue: asyncio.Queue[dict[Any, Any]] = asyncio.Queue()
 
         self._task = asyncio.create_task(self._gameLoop())
 
@@ -54,7 +55,7 @@ class Uber:
         7. parent kills the game
     """
 
-    def getState(self) -> dict:
+    def getState(self) -> dict[str, Any]:
         return {"glasses": self._glasses}
 
     # when the game starts, so when players can make moves
@@ -91,7 +92,7 @@ class Uber:
 
     # TODO: un-async this
 
-    async def parseMessage(self, data: dict) -> dict | None:
+    async def parseMessage(self, data: dict[str, Any]) -> dict[str, Any] | None:
         await self._recvQueue.put(data)
         return await self._sendQueue.get()
 
@@ -108,7 +109,6 @@ class Uber:
                     self.turnNr += 1
                     self.renewStateEvent.set()
                     print("turn ended")
-                    result = None
                 case "roll":
                     # throw the dice
                     recentThrow = randint(0, len(self._glasses) - 1)
@@ -118,7 +118,6 @@ class Uber:
                         # and wait for their next move
                         self.points[self.turnUUID()] += self._glasses[recentThrow]
                         self._glasses[recentThrow] = 0
-                        result = None
                         self.renewStateEvent.set()
                         await self._sendQueue.put(None)
                         continue
@@ -141,13 +140,15 @@ class Uber:
                     self.turnNr += 1
                     self.renewStateEvent.set()
                     print("turn ended")
-                    result = None
                 case "getState":
                     await self._sendQueue.put(
                         {"type": "state", "state": self._glasses}
                     )
                 case _:
                     print(f"Illegal operation: chose {msg.choice}.")
-                    result = None
             # every path must have some sort of response to put
             await self._sendQueue.put(None)
+
+
+# compile time verification
+_check: Game = Uber()

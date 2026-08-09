@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
 
-from typing import Annotated, Literal, cast
+from typing import Literal, cast
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Request, Response
@@ -12,7 +12,7 @@ from app.auth.session import isAuthenticated
 
 # form validation
 from app.models.datastructs import StateModel
-from app.models.verify import DashCreateMsg, DashRoomPlayerOperation, LoginForm
+from app.models.verify import DashCreateMsg, DashRoomPlayerOperation
 
 router = APIRouter()
 

@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
 
+from typing import Any
+
 from fastapi import WebSocket
 import asyncio
 from uuid import uuid4, UUID
@@ -69,22 +71,20 @@ class ConnectionMgr:
             print("connection changes have been locked. Game must stop!")
             exit(0)
 
-    async def broadcast(self, msg: dict):
+    async def broadcast(self, msg: dict[Any, Any]):
         # list of dead connections
-        dead = []
+        dead: list[Client] = []
         connections = self.connections
 
-        async def send(ws: WebSocket):
+        async def send(client: Client):
             try:
-                print(
-                    f"connections.py: broadcasted to {self.connections[ws].userName}."
-                )
-                await ws.send_json(msg)
+                print(f"connections.py: broadcasted to {client.userName}.")
+                await client.ws.send_json(msg)
             except Exception:
-                dead.append(ws)
+                dead.append(client)
 
-        await asyncio.gather(*(send(ws) for ws in connections))
+        await asyncio.gather(*(send(ws) for ws in connections.values()))
 
         # might be a dumb way to do this. TODO: check later
-        for ws in dead:
-            await self.disconnect(ws)
+        for client in dead:
+            await self.disconnect(client.uuid)

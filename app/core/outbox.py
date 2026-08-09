@@ -4,10 +4,8 @@
 import logging
 from typing import Any
 
-from griffe import DocstringSectionAttributes
-
 from app.models.primitives import Actor
-from app.core.connections import ConnectionMgr, Client
+from app.core.connections import ConnectionMgr
 from app.core.supervisor import GameSupervisor
 import asyncio
 from uuid import UUID
@@ -62,7 +60,9 @@ class AdminStream(Actor):
 
 
 class Sender(Actor):
-    def __init__(self, queue: asyncio.Queue[tuple[UUID, dict]], cMgr: ConnectionMgr):
+    def __init__(
+        self, queue: asyncio.Queue[tuple[UUID, dict[Any, Any]]], cMgr: ConnectionMgr
+    ):
         self.queue = queue
         self.cMgr = cMgr
 

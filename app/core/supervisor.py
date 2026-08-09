@@ -1,13 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
-from app.models.primitives import Actor
-from app.core import RoomManager
-import asyncio
-from pydantic import ValidationError
-from uuid import UUID
-from app.auth.crypt import computeJSONHash
 
+from app.core import RoomManager
+from uuid import UUID
 import logging
+from app.auth.crypt import computeJSONHash
 
 # TODO: replace most print statements by LOG statements throughout this code
 logger = logging.getLogger(__name__)
@@ -18,7 +15,6 @@ class GameSupervisor:
         self._adminOutbox = rMgr.adminOutbox
         self._rMgr = rMgr
 
-        self._task: asyncio.Task[dict | None] | None = None
         self.admins: list[UUID] = []
 
     def generateStateHash(self) -> str:

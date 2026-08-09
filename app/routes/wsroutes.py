@@ -6,12 +6,9 @@ from json import JSONDecodeError
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.core.connections import initClient
-from game.gameActor import GameActor
-from app.models.verify import GameRegisterMsg, DashRegMsg
+from app.models.verify import GameRegisterMsg
 from app.models.datastructs import StateModel
-from app.auth.session import isAuthenticated
-from app.auth.crypt import validateCsrf
-from pydantic import ValidationError, model_validator
+from pydantic import ValidationError
 from typing import cast
 
 router = APIRouter()

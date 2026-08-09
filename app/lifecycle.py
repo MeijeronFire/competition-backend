@@ -3,11 +3,10 @@
 
 from contextlib import asynccontextmanager
 import asyncio
-import traceback
 from fastapi import FastAPI
 from typing import Any, cast
 from uuid import UUID
-import signal
+
 
 from app.core import ConnectionMgr
 from app.core import RoomManager
@@ -15,7 +14,6 @@ from app.core import Sender
 from app.core import AdminStream
 from app.core import GameSupervisor
 from app.models.datastructs import StateModel
-from app.utils import log_async_error
 
 
 @asynccontextmanager
@@ -42,13 +40,12 @@ async def lifespan(app: FastAPI):
     # set the maxsize to 100, s.t. if the handling is less than traffic,
     # we block allowing new msgs
     # inbox: asyncio.Queue[Tuple[Client, Dict]] = asyncio.Queue(maxsize = 100)
-    outbox: asyncio.Queue[tuple[UUID, dict]] = asyncio.Queue(maxsize=100)
+    outbox: asyncio.Queue[tuple[UUID, dict[str, Any]]] = asyncio.Queue(maxsize=100)
     adminOutbox: asyncio.Queue[tuple[str, dict[str, Any]]] = asyncio.Queue(
         maxsize=100
     )
 
-    app.state.outbox = outbox
-    app.state.outbox = adminOutbox
+    state.outbox = adminOutbox
 
     rMgr = RoomManager(outbox, adminOutbox)
     app.state.rMgr = rMgr

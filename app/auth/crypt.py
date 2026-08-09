@@ -8,7 +8,7 @@ from fastapi.requests import Request
 import csv
 
 from fastapi import Request, WebSocket
-from typing import Union
+from typing import Any, Union
 
 import logging
 
@@ -104,7 +104,7 @@ def validatePassword(username: str, password: str) -> bool:
 
 
 # a way to calculate the hash in a consistent way
-def computeJSONHash(obj: dict) -> str:
+def computeJSONHash(obj: dict[Any, Any]) -> str:
     """Compute hash of JSONified dict
 
     This is a standardized way to turn a dict into a JSON string, and afterwards

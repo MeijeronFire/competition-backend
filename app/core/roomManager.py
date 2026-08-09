@@ -5,20 +5,18 @@ import asyncio
 from typing import Any
 from uuid import UUID
 
-from game import GameActor
-from game import TestGame
+from game.models import Game
+from game.gameActor import GameActor
+from game.testgame import TestGame
 from game.uber import Uber
 
-from app.auth.crypt import computeJSONHash
-from app.utils import log_async_error
-
-from random import randint
+from random import randint  # pyright: ignore[reportUnusedImport]
 
 
 class RoomManager:
     def __init__(
         self,
-        outbox: asyncio.Queue[tuple[UUID, dict]],
+        outbox: asyncio.Queue[tuple[UUID, dict[Any, Any]]],
         adminOutbox: asyncio.Queue[tuple[str, dict[str, Any]]],
     ):
         self.rooms: dict[int, GameActor] = {}
@@ -28,7 +26,7 @@ class RoomManager:
         # THIS IS BAD
         # THIS IS BAD
         # maybe a .name?
-        self.games = {"testGame": TestGame, "uber": Uber}
+        self.games: dict[str, type[Game]] = {"testGame": TestGame, "uber": Uber}
 
     async def create(self, game: str) -> int | None:
         # room_id = randint(10000, 99999)
@@ -48,7 +46,7 @@ class RoomManager:
             roomID = sorted(self.rooms.keys())[-1] + 1  # largest + 1
 
         print(f"\033[1;32mINFO:\t\033[0m  Instantiated {game} at {roomID}")
-        inbox: asyncio.Queue[tuple[UUID, dict]] = asyncio.Queue()
+        inbox: asyncio.Queue[tuple[UUID, dict[str, Any]]] = asyncio.Queue()
         actor = GameActor(
             self.games[game](), roomID, inbox, self.outbox, self.adminOutbox
         )
@@ -65,10 +63,10 @@ class RoomManager:
         # maybe call some sort of destructor on the object itself?
 
     # the "official" way to build the complete state
-    def buildState(self) -> dict:
+    def buildState(self) -> dict[int, Any]:
         # The format of the general state of the game can be determined
         # here, so that the state in the game implementation is more lean.
-        state = {}
+        state: dict[int, Any] = {}
         for room in self.rooms.keys():
             state[room] = self.rooms[room].toState()
         return state

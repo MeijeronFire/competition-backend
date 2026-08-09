@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Otto Crawford
 
-from typing import Protocol, runtime_checkable, Literal
+from typing import Any, Protocol, runtime_checkable, Literal
 from uuid import UUID
 import asyncio
 
@@ -10,7 +10,7 @@ import asyncio
 class Game(Protocol):
     minPlayers: int = 2
     UUIDs: list[UUID]
-    genericState: list
+    genericState: list[Any]
     playerNames: dict[UUID, str]
     points: dict[UUID, int]
     name: str
@@ -31,7 +31,8 @@ class Game(Protocol):
         7. parent kills the game
     """
 
-    def getState(self) -> dict:
+    # TODO: make all dict[Any, Any] more explicit and constrained
+    def getState(self) -> dict[Any, Any]:
         return {}
 
     # when the game starts, so when players can make moves
@@ -55,4 +56,4 @@ class Game(Protocol):
     def popPlayer(self, uuid: UUID): ...
 
     # TODO: un-async this
-    async def parseMessage(self, data: dict) -> dict | None: ...
+    async def parseMessage(self, data: dict[str, Any]) -> dict[str, Any] | None: ...

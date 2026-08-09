@@ -5,7 +5,6 @@ import asyncio
 import logging
 from typing import Any, Literal
 
-from app.core import roomManager
 from app.utils import log_async_error
 from game.models import Game
 from uuid import UUID
@@ -19,8 +18,8 @@ class GameActor:
         self,
         game: Game,
         id: int,
-        inbox: asyncio.Queue[tuple[UUID, dict]],
-        outbox: asyncio.Queue[tuple[UUID, dict]],
+        inbox: asyncio.Queue[tuple[UUID, dict[Any, Any]]],
+        outbox: asyncio.Queue[tuple[UUID, dict[str, Any]]],
         adminOutbox: asyncio.Queue[tuple[str, dict[str, Any]]],
     ):
         self.game = game
@@ -81,7 +80,7 @@ class GameActor:
     # generate the badges displayed on the dashboard
     def _genBadges(self) -> list[dict[str, str]]:
         # add elements from the gameclass
-        badges = []
+        badges: list[dict[str, str]] = []
 
         # (empty)
         if len(self.game.UUIDs) == 0:

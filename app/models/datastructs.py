@@ -1,3 +1,8 @@
+import asyncio
+from typing import Any
+
+# from uuid import UUID
+
 from app.core import RoomManager, ConnectionMgr, GameSupervisor, Sender
 from app.core.outbox import AdminStream
 
@@ -15,3 +20,4 @@ class StateModel:
     sender: Sender
     adminStream: AdminStream
     running: bool
+    outbox: asyncio.Queue[tuple[str, dict[str, Any]]]

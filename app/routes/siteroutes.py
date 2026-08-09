@@ -3,7 +3,7 @@
 
 from fastapi import APIRouter, Form, Request, HTTPException
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, Response
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 # for our HTTP routing
 from app.auth.session import isAuthenticated

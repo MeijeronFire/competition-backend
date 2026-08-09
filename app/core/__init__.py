@@ -7,3 +7,12 @@ from app.core.roomManager import RoomManager
 from app.core.outbox import Sender
 from app.core.outbox import AdminStream
 from app.core.supervisor import GameSupervisor
+
+__all__ = [
+    "Client",
+    "ConnectionMgr",
+    "RoomManager",
+    "Sender",
+    "AdminStream",
+    "GameSupervisor",
+]

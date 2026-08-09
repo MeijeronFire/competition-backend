@@ -3,7 +3,7 @@
 
 import logging
 import random
-from typing import Literal
+from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict
 from uuid import UUID
 from game.models import Game
@@ -47,12 +47,12 @@ class TestGame:
 
         self._running = False
         self._task = asyncio.create_task(self._gameLoop())
-        self._sendQueue: asyncio.Queue[dict | None] = asyncio.Queue()
-        self._recvQueue: asyncio.Queue[dict] = asyncio.Queue()
+        self._sendQueue: asyncio.Queue[dict[Any, Any] | None] = asyncio.Queue()
+        self._recvQueue: asyncio.Queue[dict[Any, Any]] = asyncio.Queue()
         # bit of an ugly hack, but it will work
         self.renewStateEvent = asyncio.Event()
 
-    def getState(self):
+    def getState(self) -> dict[Any, Any]:
         return {}
 
     def addPlayer(self, uuid: UUID, username: str):
@@ -92,7 +92,7 @@ class TestGame:
     def reset(self) -> None:
         self.roomState = "closed"
 
-    async def parseMessage(self, data: dict) -> dict | None:
+    async def parseMessage(self, data: dict[str, Any]) -> dict[str, Any] | None:
         await self._recvQueue.put(data)
         return await self._sendQueue.get()
 

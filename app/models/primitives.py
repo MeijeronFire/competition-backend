@@ -2,7 +2,6 @@
 # Copyright (C) 2026 Otto Crawford
 
 import asyncio
-import traceback
 from abc import ABC, abstractmethod
 from app.utils import log_async_error
 

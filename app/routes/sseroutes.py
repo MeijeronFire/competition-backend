@@ -4,13 +4,10 @@
 import asyncio
 import json
 import logging
-from random import randint
 from typing import Any, cast
 
 from fastapi import APIRouter, Request
 from fastapi.sse import EventSourceResponse
-
-from collections.abc import AsyncIterable
 
 from pydantic import BaseModel
 
