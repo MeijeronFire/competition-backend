@@ -8,8 +8,13 @@
     <!-- Left: Game canvas -->
     <div class="w-75 d-flex flex-column align-items-center">
         <div class="card w-100">
-            <div class="card-body" id="game-view">
-                <canvas id="canvas" class="w-100 h-100" width="2000" height="1000"></canvas>
+            <div class="card-body position-relative" id="game-view" style="width: 100%; height: 70vh">
+                <div class="player-card position-absolute bg-danger" id="test-card">
+                    <h5 class="text-light">Name</h5>
+                    <p>
+                        Enim sunt occaecat in consectetur proident proident eu do eiusmod quis Lorem minim dolore. Non nostrud fugiat ad velit et. Mollit nostrud laborum eiusmod incididunt ad excepteur non enim est do do elit sint. Eiusmod ex nulla ea dolor non eu sunt. Ad quis laboris incididunt eiusmod reprehenderit occaecat irure dolor.
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -114,4 +119,8 @@
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="{{ url_for('static', path='/js/peek.js') }}"></script>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/peek.css') }}">
 {% endblock %}

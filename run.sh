@@ -8,7 +8,7 @@ echo "This program comes with ABSOLUTELY NO WARRANTY; " \
       "under certain conditions;" \
 
 uv run uvicorn app:app \
-  --host 0.0.0.0 \
+  --host localhost \
   --port 8000 \
   --ssl-keyfile key.pem \
   --ssl-certfile cert.pem \

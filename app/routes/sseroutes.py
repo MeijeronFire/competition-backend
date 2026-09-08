@@ -71,7 +71,7 @@ async def roomStream(request: Request, roomID: int):
 
             # handle message sending
             # queue.task_done()
-            print(json.dumps(msg))
+            # print(json.dumps(msg))
             yield {"data": json.dumps(msg)}
     finally:
         # disconnection hook

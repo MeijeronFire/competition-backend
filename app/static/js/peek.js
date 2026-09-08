@@ -37,18 +37,6 @@ events.onmessage = async (event) => {
             break;
         case "glassesEvent":
             let after = msg.data;
-            const changes = before.flatMap((v, i) =>
-                v !== after[i]
-                    ? [{ index: i, diff: after[i] - v }]
-                    : []
-            );
-
-            // console.log(changes);
-            before = [...after];
-            for (const x of changes) {
-                if (x.diff === 0) continue;
-                await console.log(x.index, x.diff);
-            }
             break;
         default:
             return;
@@ -90,3 +78,4 @@ window.kickPlayer = async function kickPlayer(UUID) {
         warn("Reloading the page will probably fix the issue. If not, contact maintainer.", "Invalid request")
     }
 }
+
